@@ -120,10 +120,10 @@ $.extend(erpnext.queries, {
 
 	warehouse: function (doc) {
 		return {
-			filters: [
-				["Warehouse", "company", "in", ["", cstr(doc.company)]],
-				["Warehouse", "is_group", "=", 0],
-			],
+			filters:{
+				"company" : cstr(doc.company),
+				"is_group": 0
+			}
 		};
 	},
 
