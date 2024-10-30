@@ -100,8 +100,8 @@ class TestAsset(AssetSetup):
 		self.assertRaises(frappe.ValidationError, asset.save)
 
 	def test_validate_item(self):
-		asset = create_asset(item_code="MacBook Pro", do_not_save=1)
-		item = frappe.get_doc("Item", "MacBook Pro")
+		asset = create_asset(item_code="Macbook Pro", do_not_save=1)
+		item = frappe.get_doc("Item", "Macbook Pro")
 
 		item.disabled = 1
 		item.save()
@@ -374,6 +374,7 @@ class TestAsset(AssetSetup):
 		pro_rata_amount = flt(pro_rata_amount, asset.precision("gross_purchase_amount"))
 
 		expected_gle = (
+			("Debtors - _TC", 25000.0, 0.0),
 			(
 				"_Test Accumulated Depreciations - _TC",
 				flt(18000.0 + pro_rata_amount, asset.precision("gross_purchase_amount")),
@@ -385,7 +386,6 @@ class TestAsset(AssetSetup):
 				flt(57000.0 - pro_rata_amount, asset.precision("gross_purchase_amount")),
 				0.0,
 			),
-			("Debtors - _TC", 25000.0, 0.0),
 		)
 		gle = get_gl_entries("Sales Invoice", si.name)
 		self.assertSequenceEqual(gle, expected_gle)
@@ -453,6 +453,7 @@ class TestAsset(AssetSetup):
 			self.assertTrue(schedule.journal_entry)
 
 		expected_gle = (
+			("Debtors - _TC", 40000.0, 0.0),
 			(
 				"_Test Accumulated Depreciations - _TC",
 				37737.7,
@@ -468,7 +469,6 @@ class TestAsset(AssetSetup):
 				0.0,
 				17737.7,
 			),
-			("Debtors - _TC", 40000.0, 0.0),
 		)
 
 		gle = get_gl_entries("Sales Invoice", si.name)
@@ -617,11 +617,10 @@ class TestAsset(AssetSetup):
 		pr.submit()
 
 		expected_gle = (
-			("_Test Account Shipping Charges - _TC", 0.0, 250.0),
 			("Asset Received But Not Billed - _TC", 0.0, 5000.0),
 			("CWIP Account - _TC", 5250.0, 0.0),
+			("_Test Account Shipping Charges - _TC", 0.0, 250.0),
 		)
-
 		pr_gle = get_gl_entries("Purchase Receipt", pr.name)
 		self.assertSequenceEqual(pr_gle, expected_gle)
 
@@ -629,10 +628,10 @@ class TestAsset(AssetSetup):
 		pi.submit()
 
 		expected_gle = (
-			("_Test Account Service Tax - _TC", 250.0, 0.0),
-			("_Test Account Shipping Charges - _TC", 250.0, 0.0),
 			("Asset Received But Not Billed - _TC", 5000.0, 0.0),
 			("Creditors - _TC", 0.0, 5500.0),
+			("_Test Account Service Tax - _TC", 250.0, 0.0),
+			("_Test Account Shipping Charges - _TC", 250.0, 0.0),
 		)
 
 		pi_gle = get_gl_entries("Purchase Invoice", pi.name)
@@ -663,8 +662,8 @@ class TestAsset(AssetSetup):
 		asset_doc.submit()
 
 		expected_gle = (
-			("_Test Fixed Asset - _TC", 5250.0, 0.0),
 			("CWIP Account - _TC", 0.0, 5250.0),
+			("_Test Fixed Asset - _TC", 5250.0, 0.0),
 		)
 
 		gle = get_gl_entries("Asset", asset_doc.name)
