@@ -412,12 +412,11 @@ class TestQuotation(FrappeTestCase):
 		]
 
 		quotation = make_quotation(item_list=item_list, do_not_submit=1)
-		if len(quotation.packed_items) >= 4:
-			quotation.packed_items[0].rate = 100
-			quotation.packed_items[1].rate = 200
-			quotation.packed_items[2].rate = 200
-			quotation.packed_items[3].rate = 300
-			quotation.save()
+		quotation.packed_items[0].rate = 100
+		quotation.packed_items[1].rate = 200
+		quotation.packed_items[2].rate = 200
+		quotation.packed_items[3].rate = 300
+		quotation.save()
 
 		expected_values = [300, 500]
 
