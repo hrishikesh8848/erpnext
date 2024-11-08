@@ -2000,7 +2000,7 @@ def increment_committed_overall_budget(self):
 			if budget.work_breakdown_structure is not None:
 				total = budget.amount
 				doc = frappe.get_doc("Work Breakdown Structure",budget.work_breakdown_structure)
-				doc.committed_overall_budget += total
+				doc.actual_overall_budget += total
 				doc.save()
 
 def decrement_committed_overall_budget(self):
@@ -2009,7 +2009,7 @@ def decrement_committed_overall_budget(self):
 			if budget.work_breakdown_structure is not None:
 				total = budget.amount
 				doc = frappe.get_doc("Work Breakdown Structure",budget.work_breakdown_structure)
-				doc.committed_overall_budget -= total
+				doc.actual_overall_budget -= total
 				doc.save()
 
 def create_budget_entry(self):
