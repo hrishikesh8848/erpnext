@@ -5,6 +5,7 @@
  "editable_grid": 1,
  "engine": "InnoDB",
  "field_order": [
+  "child_wbs",
   "account",
   "budget_amount"
  ],
@@ -25,11 +26,19 @@
    "label": "Budget Amount",
    "options": "Company:company:default_currency",
    "reqd": 1
+  },
+  {
+   "fieldname": "child_wbs",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Child WBS",
+   "options": "Work Breakdown Structure",
+   "reqd": 1
   }
  ],
  "istable": 1,
  "links": [],
- "modified": "2024-03-04 15:43:27.016947",
+ "modified": "2024-11-06 15:31:05.245416",
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "Budget Account",

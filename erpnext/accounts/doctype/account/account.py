@@ -41,7 +41,6 @@ class Account(NestedSet):
 		freeze_account: DF.Literal["No", "Yes"]
 		include_in_gross: DF.Check
 		is_group: DF.Check
-		is_open_item: DF.Check
 		lft: DF.Int
 		old_parent: DF.Data | None
 		parent_account: DF.Link

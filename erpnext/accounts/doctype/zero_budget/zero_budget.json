@@ -1,0 +1,110 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "format:ZERO-BGT-{###}",
+ "creation": "2024-10-25 13:59:42.122316",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "posting_date",
+  "get_wbs",
+  "column_break_9vjy",
+  "project",
+  "company",
+  "section_break_ce7o",
+  "zero_budget_item",
+  "budget_entry",
+  "amended_from",
+  "total"
+ ],
+ "fields": [
+  {
+   "fieldname": "posting_date",
+   "fieldtype": "Date",
+   "label": "Posting Date"
+  },
+  {
+   "fieldname": "project",
+   "fieldtype": "Link",
+   "label": "Project",
+   "options": "Project"
+  },
+  {
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "label": "Company",
+   "options": "Company"
+  },
+  {
+   "fieldname": "get_wbs",
+   "fieldtype": "Button",
+   "label": "Get WBS"
+  },
+  {
+   "fieldname": "section_break_ce7o",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "zero_budget_item",
+   "fieldtype": "Table",
+   "label": "Zero Budget Item",
+   "options": "Zero Budget Item"
+  },
+  {
+   "fieldname": "column_break_9vjy",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "budget_entry",
+   "fieldtype": "Link",
+   "label": "Budget Entry",
+   "options": "Budget Entry"
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "no_copy": 1,
+   "options": "Zero Budget",
+   "print_hide": 1,
+   "read_only": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "total",
+   "fieldtype": "Currency",
+   "label": "Total"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "is_submittable": 1,
+ "links": [
+  {
+   "link_doctype": "Budget Entry",
+   "link_fieldname": "voucher_no"
+  }
+ ],
+ "modified": "2024-11-07 18:34:43.613853",
+ "modified_by": "Administrator",
+ "module": "Accounts",
+ "name": "Zero Budget",
+ "naming_rule": "Expression",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

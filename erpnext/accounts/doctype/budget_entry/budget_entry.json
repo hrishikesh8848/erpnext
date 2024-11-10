@@ -1,0 +1,173 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "format:BGT-ENT-{###}",
+ "creation": "2024-10-25 14:29:52.847630",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "project",
+  "wbs",
+  "posting_date",
+  "column_break_ccnn",
+  "company",
+  "wbs_name",
+  "wbs_level",
+  "document_date",
+  "section_break_jj84",
+  "overall_credit",
+  "committed_overall_credit",
+  "actual_overall_credit",
+  "voucher_type",
+  "voucher_submit_date",
+  "column_break_vk2s",
+  "overall_debit",
+  "committed_overall_debit",
+  "actual_overall_debit",
+  "voucher_no",
+  "amended_from",
+  "zero_budget"
+ ],
+ "fields": [
+  {
+   "fieldname": "project",
+   "fieldtype": "Link",
+   "label": "Project",
+   "options": "Project"
+  },
+  {
+   "fieldname": "overall_credit",
+   "fieldtype": "Currency",
+   "label": "Overall Credit",
+   "options": "currency"
+  },
+  {
+   "fieldname": "committed_overall_credit",
+   "fieldtype": "Currency",
+   "label": "Committed Overall Credit"
+  },
+  {
+   "fieldname": "actual_overall_credit",
+   "fieldtype": "Currency",
+   "label": "Actual Overall Credit"
+  },
+  {
+   "fieldname": "voucher_type",
+   "fieldtype": "Link",
+   "label": "Voucher Type",
+   "options": "DocType"
+  },
+  {
+   "fieldname": "posting_date",
+   "fieldtype": "Data",
+   "label": "Posting Date"
+  },
+  {
+   "fieldname": "document_date",
+   "fieldtype": "Date",
+   "label": "Document Date"
+  },
+  {
+   "fieldname": "voucher_submit_date",
+   "fieldtype": "Datetime",
+   "label": "Voucher Submit Date"
+  },
+  {
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "label": "Company",
+   "options": "Company"
+  },
+  {
+   "fieldname": "wbs",
+   "fieldtype": "Link",
+   "label": "WBS",
+   "options": "Work Breakdown Structure"
+  },
+  {
+   "fieldname": "wbs_name",
+   "fieldtype": "Data",
+   "label": "WBS Name"
+  },
+  {
+   "fieldname": "wbs_level",
+   "fieldtype": "Int",
+   "label": "WBS Level"
+  },
+  {
+   "fieldname": "overall_debit",
+   "fieldtype": "Currency",
+   "label": "Overall Debit"
+  },
+  {
+   "fieldname": "committed_overall_debit",
+   "fieldtype": "Currency",
+   "label": "Committed Overall Debit"
+  },
+  {
+   "fieldname": "actual_overall_debit",
+   "fieldtype": "Currency",
+   "label": "Actual Overall Debit"
+  },
+  {
+   "fieldname": "voucher_no",
+   "fieldtype": "Dynamic Link",
+   "label": "Voucher No",
+   "options": "voucher_type"
+  },
+  {
+   "fieldname": "column_break_vk2s",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "no_copy": 1,
+   "options": "Budget Entry",
+   "print_hide": 1,
+   "read_only": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "zero_budget",
+   "fieldtype": "Link",
+   "label": "Zero Budget",
+   "options": "Zero Budget"
+  },
+  {
+   "fieldname": "section_break_jj84",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "column_break_ccnn",
+   "fieldtype": "Column Break"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "is_submittable": 1,
+ "links": [],
+ "modified": "2024-11-05 19:02:02.682552",
+ "modified_by": "Administrator",
+ "module": "Accounts",
+ "name": "Budget Entry",
+ "naming_rule": "Expression",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

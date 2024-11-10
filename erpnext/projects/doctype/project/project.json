@@ -19,6 +19,7 @@
   "project_template",
   "expected_start_date",
   "expected_end_date",
+  "is_wbs",
   "priority",
   "department",
   "customer_details",
@@ -183,7 +184,8 @@
   },
   {
    "fieldname": "column_break_14",
-   "fieldtype": "Column Break"
+   "fieldtype": "Column Break",
+   "label": "Is WBS"
   },
   {
    "fieldname": "sales_order",
@@ -447,6 +449,12 @@
    "print_hide": 1,
    "reqd": 1,
    "set_only_once": 1
+  },
+  {
+   "default": "1",
+   "fieldname": "is_wbs",
+   "fieldtype": "Check",
+   "label": "Is WBS ?"
   }
  ],
  "icon": "fa fa-puzzle-piece",
@@ -454,7 +462,7 @@
  "index_web_pages_for_search": 1,
  "links": [],
  "max_attachments": 4,
- "modified": "2024-04-24 10:56:16.001032",
+ "modified": "2024-10-29 13:49:24.877554",
  "modified_by": "Administrator",
  "module": "Projects",
  "name": "Project",

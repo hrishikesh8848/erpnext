@@ -42,12 +42,22 @@ frappe.ui.form.on("Material Request", {
 				},
 			};
 		});
+
+		var list = frm.fields_dict['items'].grid.get_field('work_breakdown_structure').get_query = function (doc, cdt, cdn) {
+			var child = locals[cdt][cdn];
+			return {
+				filters: {
+					project : child.project,
+					is_group: 0
+				}
+			};
+		};
 	},
 
 	onload: function (frm) {
 		// add item, if previous view was item
 		erpnext.utils.add_item(frm);
-
+		frm.savecancel = function(btn, callback, on_error){ console.log("jiiri");return frm._cancel(btn, callback, on_error, false);}
 		// set schedule_date
 		set_schedule_date(frm);
 
@@ -525,6 +535,41 @@ frappe.ui.form.on("Material Request Item", {
 	conversion_factor: function (frm, doctype, name) {
 		const item = locals[doctype][name];
 		frm.events.get_item_data(frm, item, false);
+	},
+
+	project: function(frm,cdt,cdn) {
+		let child = locals[cdt][cdn];
+		frappe.db.get_value("Project", child.project, "project_name")
+		.then(response => {
+			if (response.message && response.message.project_name) {
+				let project_name = response.message.project_name;
+				child.project_name = project_name;
+			} else {
+				child.project_name = null;
+			}
+			let row = frm.fields_dict['items'].grid.get_row(cdn);
+            row.refresh_field('project_name');
+		})
+	},
+	work_breakdown_structure: function(frm,cdt,cdn) {
+		let child = locals[cdt][cdn];
+		frappe.db.get_value("Work Breakdown Structure", child.work_breakdown_structure, ["wbs_name", 'locked'])
+		.then(response => {
+			if (response.message && response.message.wbs_name) {
+				let wbs_name = response.message.wbs_name;
+				if (response.message.locked == 1) {
+					frappe.msgprint(__(`WBS "${child.work_breakdown_structure}" is locked`));
+					child.work_breakdown_structure = null;
+				} else {
+					child.wbs_name = wbs_name;
+				}
+			} else {
+				child.wbs_name = null;
+			}
+			let row = frm.fields_dict['items'].grid.get_row(cdn);
+			row.refresh_field('work_breakdown_structure')
+            row.refresh_field('wbs_name');
+		})
 	},
 });
 

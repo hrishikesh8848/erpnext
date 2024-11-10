@@ -1,0 +1,207 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "format:{project}-{wbs_name}-{###}",
+ "creation": "2024-10-25 13:46:06.977475",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "project",
+  "project_type",
+  "wbs_name",
+  "start_date",
+  "end_date",
+  "column_break_bcho",
+  "locked",
+  "project_name",
+  "company",
+  "budget_details_section",
+  "original_budget",
+  "actual_overall_budget",
+  "column_break_rade",
+  "overall_budget",
+  "assigned_overall_budget",
+  "column_break_haw1",
+  "committed_overall_budget",
+  "available_budget",
+  "section_break_wlui",
+  "is_group",
+  "gl_account",
+  "column_break_hwsg",
+  "parent_work_breakdown_structure",
+  "wbs_level",
+  "amended_from"
+ ],
+ "fields": [
+  {
+   "fieldname": "project",
+   "fieldtype": "Link",
+   "label": "Project",
+   "options": "Project",
+   "reqd": 1
+  },
+  {
+   "fieldname": "project_type",
+   "fieldtype": "Data",
+   "label": "Project Type"
+  },
+  {
+   "fieldname": "wbs_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "WBS Name",
+   "reqd": 1
+  },
+  {
+   "fieldname": "start_date",
+   "fieldtype": "Date",
+   "label": "Start Date"
+  },
+  {
+   "fieldname": "end_date",
+   "fieldtype": "Date",
+   "label": "End Date"
+  },
+  {
+   "allow_on_submit": 1,
+   "default": "0",
+   "fieldname": "locked",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "label": "Locked"
+  },
+  {
+   "fieldname": "project_name",
+   "fieldtype": "Data",
+   "label": "Project Name"
+  },
+  {
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "label": "Company",
+   "options": "Company",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_bcho",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "0",
+   "fieldname": "is_group",
+   "fieldtype": "Check",
+   "label": "Is Group"
+  },
+  {
+   "fieldname": "parent_work_breakdown_structure",
+   "fieldtype": "Link",
+   "label": "Parent Work Breakdown Structure",
+   "options": "Work Breakdown Structure"
+  },
+  {
+   "fieldname": "column_break_hwsg",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "section_break_wlui",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "no_copy": 1,
+   "options": "Work Breakdown Structure",
+   "print_hide": 1,
+   "read_only": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "budget_details_section",
+   "fieldtype": "Section Break",
+   "label": "Budget Details"
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "original_budget",
+   "fieldtype": "Currency",
+   "label": "Original Budget"
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "actual_overall_budget",
+   "fieldtype": "Currency",
+   "label": "Actual Overall Budget"
+  },
+  {
+   "fieldname": "column_break_rade",
+   "fieldtype": "Column Break"
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "overall_budget",
+   "fieldtype": "Currency",
+   "label": "Overall Budget"
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "assigned_overall_budget",
+   "fieldtype": "Currency",
+   "label": "Assigned Overall Budget"
+  },
+  {
+   "fieldname": "column_break_haw1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "committed_overall_budget",
+   "fieldtype": "Currency",
+   "label": "Committed Overall Budget"
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "available_budget",
+   "fieldtype": "Currency",
+   "label": "Available Budget"
+  },
+  {
+   "default": "0",
+   "fieldname": "wbs_level",
+   "fieldtype": "Data",
+   "label": "WBS Level"
+  },
+  {
+   "fieldname": "gl_account",
+   "fieldtype": "Link",
+   "label": "GL Account",
+   "options": "Account"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "is_submittable": 1,
+ "links": [],
+ "modified": "2024-11-07 12:22:03.000841",
+ "modified_by": "Administrator",
+ "module": "Accounts",
+ "name": "Work Breakdown Structure",
+ "naming_rule": "Expression",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

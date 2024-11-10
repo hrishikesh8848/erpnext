@@ -63,6 +63,7 @@ class PurchaseReceiptItem(Document):
 		pricing_rules: DF.SmallText | None
 		product_bundle: DF.Link | None
 		project: DF.Link | None
+		project_name: DF.Data | None
 		provisional_expense_account: DF.Link | None
 		purchase_invoice: DF.Link | None
 		purchase_invoice_item: DF.Data | None
@@ -102,8 +103,11 @@ class PurchaseReceiptItem(Document):
 		use_serial_batch_fields: DF.Check
 		valuation_rate: DF.Currency
 		warehouse: DF.Link | None
+		wbs_name: DF.Data | None
 		weight_per_unit: DF.Float
 		weight_uom: DF.Link | None
+		wip_composite_asset: DF.Link | None
+		work_breakdown_structure: DF.Link | None
 	# end: auto-generated types
 
 	pass

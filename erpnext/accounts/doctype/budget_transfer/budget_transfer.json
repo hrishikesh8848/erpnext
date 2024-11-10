@@ -1,0 +1,184 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "format:BGT-TRNSF-{##}",
+ "creation": "2024-10-29 11:00:32.782147",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "from_project",
+  "from_project_name",
+  "company",
+  "column_break_pvng",
+  "posting_date",
+  "section_break_vrtp",
+  "from_wbs",
+  "from_wbs_name",
+  "from_wbs_level",
+  "fr_og_bgt",
+  "fr_oa_bgt",
+  "column_break_www6",
+  "to_wbs",
+  "to_wbs_name",
+  "to_wbs_level",
+  "to_og_bgt",
+  "to_oa_bgt",
+  "section_break_irxr",
+  "budget_amount",
+  "column_break_7gqc",
+  "section_break_k9k0",
+  "reason",
+  "amended_from"
+ ],
+ "fields": [
+  {
+   "fieldname": "from_project",
+   "fieldtype": "Link",
+   "label": "From Project",
+   "options": "Project"
+  },
+  {
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "label": "Company",
+   "options": "Company"
+  },
+  {
+   "fieldname": "column_break_7gqc",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "posting_date",
+   "fieldtype": "Date",
+   "label": "Posting Date"
+  },
+  {
+   "fieldname": "section_break_k9k0",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "reason",
+   "fieldtype": "Text",
+   "label": "Reason"
+  },
+  {
+   "fieldname": "from_wbs",
+   "fieldtype": "Link",
+   "label": "From WBS",
+   "options": "Work Breakdown Structure"
+  },
+  {
+   "fieldname": "from_wbs_name",
+   "fieldtype": "Data",
+   "label": "From WBS Name"
+  },
+  {
+   "fieldname": "fr_og_bgt",
+   "fieldtype": "Currency",
+   "label": "From WBS Original Budget"
+  },
+  {
+   "fieldname": "column_break_www6",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "from_project_name",
+   "fieldtype": "Data",
+   "label": "From Project Name"
+  },
+  {
+   "fieldname": "to_wbs",
+   "fieldtype": "Link",
+   "label": "To WBS",
+   "options": "Work Breakdown Structure"
+  },
+  {
+   "fieldname": "to_wbs_name",
+   "fieldtype": "Data",
+   "label": "To WBS Name"
+  },
+  {
+   "fieldname": "to_wbs_level",
+   "fieldtype": "Data",
+   "label": "To WBS Level"
+  },
+  {
+   "fieldname": "to_og_bgt",
+   "fieldtype": "Currency",
+   "label": "To WBS Original Budget"
+  },
+  {
+   "fieldname": "to_oa_bgt",
+   "fieldtype": "Currency",
+   "label": "To WBS Overall Budget"
+  },
+  {
+   "fieldname": "section_break_irxr",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "budget_amount",
+   "fieldtype": "Currency",
+   "label": "Budget Amount To Be Transfered"
+  },
+  {
+   "fieldname": "from_wbs_level",
+   "fieldtype": "Data",
+   "label": "From WBS Level"
+  },
+  {
+   "fieldname": "fr_oa_bgt",
+   "fieldtype": "Currency",
+   "label": "From WBS Overall Budget"
+  },
+  {
+   "fieldname": "section_break_vrtp",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "column_break_pvng",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "no_copy": 1,
+   "options": "Budget Transfer",
+   "print_hide": 1,
+   "read_only": 1,
+   "search_index": 1
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "is_submittable": 1,
+ "links": [
+  {
+   "link_doctype": "Budget Entry",
+   "link_fieldname": "name"
+  }
+ ],
+ "modified": "2024-11-06 11:58:37.029270",
+ "modified_by": "Administrator",
+ "module": "Accounts",
+ "name": "Budget Transfer",
+ "naming_rule": "Expression",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

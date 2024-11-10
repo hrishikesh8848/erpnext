@@ -1911,22 +1911,21 @@ class AccountsController(TransactionBase):
 		return stock_items
 
 	def set_total_advance_paid(self):
+		ple = frappe.qb.DocType("Payment Ledger Entry")
 		party = self.customer if self.doctype == "Sales Order" else self.supplier
-		
-		advance =frappe.db.sql(
-			f"""SELECT 
-				(ARRAY_AGG(ple.account_currency))[1] as account_currency, 
-				ABS(SUM(ple.amount_in_account_currency)) AS amount
-			FROM 
-				"tabPayment Ledger Entry" as ple
-			WHERE
-				ple.against_voucher_type = '{self.doctype}'
-				AND ple.against_voucher_no = '{ self.name}'
-				AND ple.party = '{party}'
-				AND ple.delinked = 0
-				AND ple.company = '{self.company}'
-			"""
-		,as_dict=True)
+		advance = (
+			frappe.qb.from_(ple)
+			.select(ple.account_currency, Abs(Sum(ple.amount_in_account_currency)).as_("amount"))
+			.where(
+				(ple.against_voucher_type == self.doctype)
+				& (ple.against_voucher_no == self.name)
+				& (ple.party == party)
+				& (ple.delinked == 0)
+				& (ple.company == self.company)
+			)
+			.groupby(ple.account_currency)
+			.run(as_dict=True)
+		)
 
 		if advance:
 			advance = advance[0]
@@ -1947,7 +1946,6 @@ class AccountsController(TransactionBase):
 			else:
 				order_total = self.get("base_rounded_total") or self.base_grand_total
 				precision = "base_rounded_total" if self.get("base_rounded_total") else "base_grand_total"
-				
 
 			formatted_order_total = fmt_money(
 				order_total, precision=self.precision(precision), currency=advance.account_currency
@@ -1960,7 +1958,7 @@ class AccountsController(TransactionBase):
 					).format(formatted_advance_paid, self.name, formatted_order_total)
 				)
 
-			self.db_set("advance_paid", advance_paid)
+			frappe.db.set_value(self.doctype, self.name, "advance_paid", advance_paid)
 
 	@property
 	def company_abbr(self):

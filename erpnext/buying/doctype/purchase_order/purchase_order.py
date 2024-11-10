@@ -9,7 +9,7 @@ from frappe import _, msgprint
 from frappe.desk.notifications import clear_doctype_notifications
 from frappe.model.mapper import get_mapped_doc
 from frappe.utils import cint, cstr, flt, get_link_to_form
-
+from datetime import datetime
 from erpnext.accounts.doctype.sales_invoice.sales_invoice import (
 	unlink_inter_company_doc,
 	update_linked_doc,
@@ -221,6 +221,13 @@ class PurchaseOrder(BuyingController):
 		)
 		self.reset_default_field_value("set_warehouse", "items", "warehouse")
 
+	def before_cancel(self):
+		create_budget_entry_on_cancel(self)
+
+	def before_submit(self):
+		create_budget_entry(self)
+	
+		
 	def validate_with_previous_doc(self):
 		mri_compare_fields = [["project", "="], ["item_code", "="]]
 		if self.is_subcontracted:
@@ -482,6 +489,9 @@ class PurchaseOrder(BuyingController):
 		update_linked_doc(self.doctype, self.name, self.inter_company_order_reference)
 
 		self.auto_create_subcontracting_order()
+		increment_committed_overall_budget(self)
+
+		
 
 	def on_cancel(self):
 		self.ignore_linked_doctypes = (
@@ -490,7 +500,7 @@ class PurchaseOrder(BuyingController):
 			"Unreconcile Payment",
 			"Unreconcile Payment Entries",
 		)
-
+		self.flags.ignore_links = True
 		super().on_cancel()
 
 		if self.is_against_so():
@@ -514,6 +524,7 @@ class PurchaseOrder(BuyingController):
 		self.update_ordered_qty()
 
 		self.update_blanket_order()
+		decrement_committed_overall_budget(self)
 
 		unlink_inter_company_doc(self.doctype, self.name, self.inter_company_order_reference)
 
@@ -819,6 +830,7 @@ def get_mapped_purchase_invoice(source_name, target_doc=None, ignore_permissions
 		ignore_permissions=ignore_permissions,
 	)
 
+	print(doc,'docccccccccccc')
 	return doc
 
 
@@ -933,3 +945,56 @@ def is_subcontracting_order_created(po_name) -> bool:
 		if frappe.db.exists("Subcontracting Order", {"purchase_order": po_name, "docstatus": ["=", 1]})
 		else False
 	)
+
+
+def increment_committed_overall_budget(self):
+	for budget in self.items:
+		if budget.work_breakdown_structure is not None:
+			total = budget.amount
+			doc = frappe.get_doc("Work Breakdown Structure",budget.work_breakdown_structure)
+			doc.committed_overall_budget += total
+			doc.save()
+
+def decrement_committed_overall_budget(self):
+	for budget in self.items:
+		if budget.work_breakdown_structure is not None:
+			total = budget.amount
+			doc = frappe.get_doc("Work Breakdown Structure",budget.work_breakdown_structure)
+			doc.committed_overall_budget -= total
+			doc.save()
+
+def create_budget_entry(self):
+	for budget in self.items:
+		if budget.work_breakdown_structure is not None:
+			data_from = frappe.new_doc("Budget Entry")
+			wbs_level=frappe.get_doc('Work Breakdown Structure',budget.work_breakdown_structure)
+			data_from.voucher_type = self.doctype
+			data_from.project = budget.project
+			data_from.company = self.company
+			data_from.posting_date = datetime.now().strftime("%Y-%m-%d")
+			data_from.document_date = self.transaction_date
+			data_from.wbs = budget.work_breakdown_structure
+			data_from.wbs_name = budget.wbs_name
+			data_from.voucher_no = self.name
+			data_from.overall_credit = budget.amount
+			data_from.wbs_level = wbs_level.wbs_level
+			data_from.insert()
+			data_from.submit()
+
+def create_budget_entry_on_cancel(self):
+	for budget in self.items:
+		if budget.work_breakdown_structure is not None:
+			data_from = frappe.new_doc("Budget Entry")
+			wbs_level=frappe.get_doc('Work Breakdown Structure',budget.work_breakdown_structure)
+			data_from.voucher_type = self.doctype
+			data_from.project = budget.project
+			data_from.company = self.company
+			data_from.posting_date = datetime.now().strftime("%Y-%m-%d")
+			data_from.document_date = self.transaction_date
+			data_from.wbs = budget.work_breakdown_structure
+			data_from.wbs_name = budget.wbs_name
+			data_from.voucher_no = self.name
+			data_from.overall_debit = budget.amount
+			data_from.wbs_level = wbs_level.wbs_level
+			data_from.insert()
+			data_from.submit()

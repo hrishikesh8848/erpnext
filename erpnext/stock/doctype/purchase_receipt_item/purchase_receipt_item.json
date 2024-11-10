@@ -122,8 +122,11 @@
   "provisional_expense_account",
   "accounting_dimensions_section",
   "project",
-  "dimension_col_break",
+  "work_breakdown_structure",
   "cost_center",
+  "dimension_col_break",
+  "project_name",
+  "wbs_name",
   "section_break_80",
   "page_break",
   "sales_order",
@@ -1099,12 +1102,28 @@
    "no_copy": 1,
    "options": "Company:company:default_currency",
    "print_hide": 1
+  },
+  {
+   "fieldname": "work_breakdown_structure",
+   "fieldtype": "Link",
+   "label": "Work Breakdown Structure",
+   "options": "Work Breakdown Structure"
+  },
+  {
+   "fieldname": "project_name",
+   "fieldtype": "Data",
+   "label": "Project Name"
+  },
+  {
+   "fieldname": "wbs_name",
+   "fieldtype": "Data",
+   "label": "WBS Name"
   }
  ],
  "idx": 1,
  "istable": 1,
  "links": [],
- "modified": "2024-07-19 12:14:21.521466",
+ "modified": "2024-11-04 17:04:33.078193",
  "modified_by": "Administrator",
  "module": "Stock",
  "name": "Purchase Receipt Item",

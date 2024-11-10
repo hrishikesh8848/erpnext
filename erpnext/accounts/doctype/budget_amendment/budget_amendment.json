@@ -1,0 +1,123 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2024-10-30 13:31:17.948554",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "project",
+  "project_name",
+  "get_wbs",
+  "column_break_vewb",
+  "company",
+  "posting_date",
+  "section_break_7j5e",
+  "budget_amendment_items",
+  "section_break_lp3o",
+  "total_overall_budget",
+  "total_increment_budget",
+  "total_decrement_budget",
+  "amended_from"
+ ],
+ "fields": [
+  {
+   "fieldname": "project",
+   "fieldtype": "Link",
+   "label": "Project",
+   "options": "Project"
+  },
+  {
+   "fieldname": "project_name",
+   "fieldtype": "Data",
+   "label": "Project Name"
+  },
+  {
+   "fieldname": "company",
+   "fieldtype": "Data",
+   "label": "Company"
+  },
+  {
+   "fieldname": "get_wbs",
+   "fieldtype": "Button",
+   "label": "GET WBS"
+  },
+  {
+   "fieldname": "total_overall_budget",
+   "fieldtype": "Data",
+   "label": "Total Overall Budget"
+  },
+  {
+   "fieldname": "total_increment_budget",
+   "fieldtype": "Data",
+   "label": "Total Increment Budget"
+  },
+  {
+   "fieldname": "total_decrement_budget",
+   "fieldtype": "Data",
+   "label": "Total Decrement Budget"
+  },
+  {
+   "fieldname": "posting_date",
+   "fieldtype": "Data",
+   "label": "Posting Date"
+  },
+  {
+   "fieldname": "budget_amendment_items",
+   "fieldtype": "Table",
+   "label": "Budget Amendment Items",
+   "options": "Budget Amendment Items"
+  },
+  {
+   "fieldname": "column_break_vewb",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "section_break_7j5e",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "section_break_lp3o",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "no_copy": 1,
+   "options": "Budget Amendment",
+   "print_hide": 1,
+   "read_only": 1,
+   "search_index": 1
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "is_submittable": 1,
+ "links": [
+  {
+   "link_doctype": "Budget Entry",
+   "link_fieldname": "voucher_no"
+  }
+ ],
+ "modified": "2024-11-07 18:35:30.270115",
+ "modified_by": "Administrator",
+ "module": "Accounts",
+ "name": "Budget Amendment",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

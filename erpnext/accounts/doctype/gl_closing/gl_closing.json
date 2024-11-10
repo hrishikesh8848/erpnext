@@ -61,8 +61,13 @@
    "reqd": 1
   }
  ],
- "links": [],
- "modified": "2024-10-21 14:56:37.715398",
+ "links": [
+  {
+   "link_doctype": "Sales Order",
+   "link_fieldname": "gl_closing"
+  }
+ ],
+ "modified": "2024-10-24 10:56:11.300699",
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "GL Closing",

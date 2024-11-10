@@ -1,6 +1,6 @@
 FIELD_MAPPING = {
     "Accounts Settings": [
-         {
+        {
             "fieldname": "section_break",
             "label": "Section Break",
             "fieldtype": "Section Break",

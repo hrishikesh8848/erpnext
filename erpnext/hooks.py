@@ -9,7 +9,15 @@ app_license = "GNU General Public License (v3)"
 source_link = "https://github.com/frappe/erpnext"
 app_logo_url = "/assets/erpnext/images/erpnext-logo.svg"
 
-
+fixtures =[
+    {"dt":"Custom Field","filters":[
+        [
+            "module","=","Stock"
+		]
+	]
+        
+	}
+]
 add_to_apps_screen = [
 	{
 		"name": "erpnext",
@@ -312,6 +320,10 @@ period_closing_doctypes = [
 	"Stock Reconciliation",
 	"Subcontracting Receipt",
 ]
+# 
+
+# apps/erpnext/erpnext/accounts/doctype/zero_budget/zero_budget.py
+
 
 doc_events = {
 	"*": {
@@ -323,6 +335,24 @@ doc_events = {
 		
 		],
 	},
+	"Project": {
+        "on_update": "erpnext.public.is_wbs.on_update",
+	},
+	
+    # "Material Request": {
+    #     "on_submit": "erpnext.public.material_request.on_submit",
+	# 	"before_submit" : "erpnext.public.material_request.before_submit"
+    # },
+	# "Purchase Order": {
+    #     "on_submit": "erpnext.public.purchase_order.on_submit",
+    # },
+	# "Purchase Invoice": {
+    #     "on_submit": "erpnext.public.purchase_invoice.on_submit",
+    # },
+
+
+
+
 	tuple(period_closing_doctypes): {
 		"validate": "erpnext.accounts.doctype.accounting_period.accounting_period.validate_accounting_period_on_doc_save",
 	},
@@ -450,7 +480,6 @@ scheduler_events = {
 		"erpnext.accounts.doctype.process_statement_of_accounts.process_statement_of_accounts.send_auto_email",
 		"erpnext.accounts.utils.auto_create_exchange_rate_revaluation_daily",
 		"erpnext.accounts.utils.run_ledger_health_checks",
-        "erpnext.accounts.doctype.gl_entry.gl_entry.update_gl_entry_once" #For Open Item Reconciliation Feature
 	],
 	"weekly": [
 		"erpnext.accounts.utils.auto_create_exchange_rate_revaluation_weekly",
@@ -651,3 +680,8 @@ fields_for_group_similar_items = ["qty", "amount"]
 
 after_migrate = "erpnext.accounts.install.after_migrate"
 
+# doc_events = {
+#     "Project": {
+#         "after_save": "erpnext.public.is_wbs.after_save"
+#     }
+# }

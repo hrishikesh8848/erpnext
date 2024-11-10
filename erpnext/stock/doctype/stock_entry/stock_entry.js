@@ -283,7 +283,7 @@ frappe.ui.form.on("Stock Entry", {
 					function () {
 						frappe.route_options = {
 							outgoing_stock_entry: frm.doc.name,
-							docstatus: ["in", [0, 1]],
+							docstatus: ["!=", 2],
 						};
 
 						frappe.set_route("List", "Stock Entry");

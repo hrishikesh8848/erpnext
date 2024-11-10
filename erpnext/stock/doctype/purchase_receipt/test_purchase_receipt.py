@@ -1043,22 +1043,15 @@ class TestPurchaseReceipt(FrappeTestCase):
 		)
 
 		pr.submit()
+
 		gl_entries = get_gl_entries("Purchase Receipt", pr.name)
 		sl_entries = get_sl_entries("Purchase Receipt", pr.name)
 
-		if frappe.db.db_type == "postgres":
-			expected_gle = [
-				["_Test Account Stock In Hand - TCP1", 0.0, 250.0],
-				["_Test Account Shipping Charges - TCP1", 0.0, 22.5],
-				["Stock In Hand - TCP1", 250.0, 0.0],
-				["Cost of Goods Sold - TCP1", 22.5, 0.0],
-			]
-		else:
-			expected_gle = [
-				["Stock In Hand - TCP1", 272.5, 0.0],
-				["_Test Account Stock In Hand - TCP1", 0.0, 250.0],
-				["_Test Account Shipping Charges - TCP1", 0.0, 22.5],
-			]
+		expected_gle = [
+			["Stock In Hand - TCP1", 272.5, 0.0],
+			["_Test Account Stock In Hand - TCP1", 0.0, 250.0],
+			["_Test Account Shipping Charges - TCP1", 0.0, 22.5],
+		]
 
 		expected_sle = {"_Test Warehouse for Valuation - TCP1": -5, "Stores - TCP1": 5}
 

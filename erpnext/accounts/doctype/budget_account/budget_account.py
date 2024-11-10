@@ -16,6 +16,7 @@ class BudgetAccount(Document):
 
 		account: DF.Link
 		budget_amount: DF.Currency
+		child_wbs: DF.Link
 		parent: DF.Data
 		parentfield: DF.Data
 		parenttype: DF.Data

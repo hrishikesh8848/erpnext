@@ -1,0 +1,81 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2024-10-30 13:33:14.101716",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "wbs_element",
+  "wbs_name",
+  "level",
+  "overall_budget",
+  "increment_budget",
+  "decrement_budget",
+  "total",
+  "reason"
+ ],
+ "fields": [
+  {
+   "fieldname": "wbs_element",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "WBS Element",
+   "options": "Work Breakdown Structure"
+  },
+  {
+   "fieldname": "wbs_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "WBS Name"
+  },
+  {
+   "fieldname": "level",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "Level"
+  },
+  {
+   "fieldname": "overall_budget",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "Overall Budget"
+  },
+  {
+   "fieldname": "increment_budget",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "Increment Budget"
+  },
+  {
+   "fieldname": "decrement_budget",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "Decrement Budget"
+  },
+  {
+   "fieldname": "total",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "Total"
+  },
+  {
+   "fieldname": "reason",
+   "fieldtype": "Small Text",
+   "in_list_view": 1,
+   "label": "Reason"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "istable": 1,
+ "links": [],
+ "modified": "2024-10-30 16:10:11.071852",
+ "modified_by": "Administrator",
+ "module": "Accounts",
+ "name": "Budget Amendment Items",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

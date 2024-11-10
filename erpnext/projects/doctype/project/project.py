@@ -27,9 +27,8 @@ class Project(Document):
 	from typing import TYPE_CHECKING
 
 	if TYPE_CHECKING:
-		from frappe.types import DF
-
 		from erpnext.projects.doctype.project_user.project_user import ProjectUser
+		from frappe.types import DF
 
 		actual_end_date: DF.Date | None
 		actual_start_date: DF.Date | None
@@ -51,6 +50,7 @@ class Project(Document):
 		gross_margin: DF.Currency
 		holiday_list: DF.Link | None
 		is_active: DF.Literal["Yes", "No"]
+		is_wbs: DF.Check
 		message: DF.Text | None
 		naming_series: DF.Literal["PROJ-.####"]
 		notes: DF.TextEditor | None
