@@ -1,7 +1,7 @@
 {
  "actions": [],
  "allow_rename": 1,
- "autoname": "format:ZERO-BGT-{###}",
+ "autoname": "ZERO-BGT-.####",
  "creation": "2024-10-25 13:59:42.122316",
  "doctype": "DocType",
  "engine": "InnoDB",
@@ -77,11 +77,11 @@
    "link_fieldname": "voucher_no"
   }
  ],
- "modified": "2024-11-11 12:14:18.698178",
+ "modified": "2024-11-14 17:50:56.983724",
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "Zero Budget",
- "naming_rule": "Expression",
+ "naming_rule": "Expression (old style)",
  "owner": "Administrator",
  "permissions": [
   {

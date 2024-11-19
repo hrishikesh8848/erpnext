@@ -2111,7 +2111,15 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 		so2.save().submit()
 
 		self.assertRaises(frappe.ValidationError, so1.update_status, "Draft")
-
+	
+	def test_sales_order_discount_on_total(self):
+		so = make_sales_order(qty=10, rate=100, do_not_save=True)
+		make_item_price()
+		make_pricing_rule()
+		so.save()
+		so.submit()
+		self.assertEqual(so.total,900)
+		
 
 def automatically_fetch_payment_terms(enable=1):
 	accounts_settings = frappe.get_doc("Accounts Settings")
@@ -2175,6 +2183,41 @@ def make_sales_order(**args):
 		so.payment_schedule = []
 
 	return so
+
+def make_item_price():
+    if not frappe.db.exists('Item Price', {'item_code': '_Test Item'}):
+        ip_doc = frappe.new_doc("Item Price")
+        item_price_data = {
+            "item_code": '_Test Item',
+            "uom": '_Test UOM',
+            "price_list": 'Standard Selling',
+            "selling": 1,
+            "price_list_rate": 100
+        }
+        ip_doc.update(item_price_data)
+        ip_doc.save()
+        return ip_doc
+
+def make_pricing_rule():
+    if not frappe.db.exists('Pricing Rule', {'title': 'Test Offer'}):
+        pricing_rule_doc = frappe.new_doc('Pricing Rule')
+        pricing_rule_data = {
+            "title": 'Test Offer',
+            "apply_on": 'Item Code',
+            "price_or_product_discount": 'Price',
+            "selling": 1,
+            "min_qty": 10,
+            "company": '_Test Company',
+            "margin_type": 'Percentage',
+            "discount_percentage": 10,
+            "for_price_list": 'Standard Selling',
+			"items":[ {"item_code": "_Test Item", "uom": '_Test UOM'}]
+        }
+        
+        pricing_rule_doc.update(pricing_rule_data)
+        pricing_rule_doc.save()
+        return pricing_rule_doc
+
 
 
 def create_dn_against_so(so, delivered_qty=0, do_not_submit=False):
