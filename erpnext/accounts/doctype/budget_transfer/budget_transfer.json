@@ -29,8 +29,7 @@
   "budget_amount",
   "column_break_7gqc",
   "section_break_k9k0",
-  "reason",
-  "amended_from"
+  "reason"
  ],
  "fields": [
   {
@@ -150,16 +149,6 @@
    "fieldtype": "Column Break"
   },
   {
-   "fieldname": "amended_from",
-   "fieldtype": "Link",
-   "label": "Amended From",
-   "no_copy": 1,
-   "options": "Budget Transfer",
-   "print_hide": 1,
-   "read_only": 1,
-   "search_index": 1
-  },
-  {
    "fieldname": "fr_av_bgt",
    "fieldtype": "Currency",
    "label": "From WBS Available Budget",
@@ -180,7 +169,7 @@
    "link_fieldname": "voucher_no"
   }
  ],
- "modified": "2024-11-13 18:19:28.412666",
+ "modified": "2024-11-19 16:43:07.780787",
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "Budget Transfer",

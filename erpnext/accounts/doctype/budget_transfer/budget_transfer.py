@@ -18,7 +18,6 @@ class BudgetTransfer(Document):
 	if TYPE_CHECKING:
 		from frappe.types import DF
 
-		amended_from: DF.Link | None
 		budget_amount: DF.Currency
 		company: DF.Link | None
 		fr_av_bgt: DF.Currency

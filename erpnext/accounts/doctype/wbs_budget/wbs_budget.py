@@ -37,6 +37,7 @@ class WBSBudget(Document):
 		monthly_distribution: DF.Link | None
 		project: DF.Link | None
 		to_date: DF.Date | None
+		total: DF.Int
 		total_amount: DF.Float
 		wbs: DF.Link | None
 		wbs_budget_items: DF.Table[WBSBudgetItems]

@@ -25,6 +25,7 @@ class WBSMonthlyDistribution(Document):
 		for_wbs: DF.Link | None
 		linked_gl_account: DF.Link | None
 		monthly_distribution: DF.Table[DistributionPercentage]
+		total: DF.Int
 		wbs_available_budget: DF.Currency
 		work_breakdown_structure_name: DF.Data | None
 	# end: auto-generated types

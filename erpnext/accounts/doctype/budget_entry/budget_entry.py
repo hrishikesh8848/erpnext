@@ -17,7 +17,6 @@ class BudgetEntry(Document):
 
 		actual_overall_credit: DF.Currency
 		actual_overall_debit: DF.Currency
-		amended_from: DF.Link | None
 		committed_overall_credit: DF.Currency
 		committed_overall_debit: DF.Currency
 		company: DF.Link | None

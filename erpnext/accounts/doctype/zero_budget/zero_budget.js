@@ -1,3 +1,4 @@
+// Zero Budget
 frappe.ui.form.on("Zero Budget", {
     onload: function(frm){
         frm.savecancel = function(btn, callback, on_error){ console.log("jiiri");return frm._cancel(btn, callback, on_error, false);}

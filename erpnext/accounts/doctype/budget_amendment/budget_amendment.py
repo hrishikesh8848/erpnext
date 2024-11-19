@@ -21,6 +21,7 @@ class BudgetAmendment(Document):
         posting_date: DF.Data | None
         project: DF.Link | None
         project_name: DF.Data | None
+        total: DF.Int
         total_decrement_budget: DF.Data | None
         total_increment_budget: DF.Data | None
     # end: auto-generated types

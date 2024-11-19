@@ -11,14 +11,13 @@ from erpnext.accounts.report.financial_statements import sort_accounts
 class WorkBreakdownStructure(Document):
 	# begin: auto-generated types
 	# This code is auto-generated. Do not modify anything in this block.
-    
+
 	from typing import TYPE_CHECKING
 
 	if TYPE_CHECKING:
 		from frappe.types import DF
 
 		actual_overall_budget: DF.Currency
-		amended_from: DF.Link | None
 		assigned_overall_budget: DF.Currency
 		available_budget: DF.Currency
 		committed_overall_budget: DF.Currency

@@ -25,7 +25,6 @@
   "committed_overall_debit",
   "actual_overall_debit",
   "voucher_no",
-  "amended_from",
   "zero_budget"
  ],
  "fields": [
@@ -120,16 +119,6 @@
    "fieldtype": "Column Break"
   },
   {
-   "fieldname": "amended_from",
-   "fieldtype": "Link",
-   "label": "Amended From",
-   "no_copy": 1,
-   "options": "Budget Entry",
-   "print_hide": 1,
-   "read_only": 1,
-   "search_index": 1
-  },
-  {
    "fieldname": "zero_budget",
    "fieldtype": "Link",
    "label": "Zero Budget",
@@ -147,7 +136,7 @@
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2024-11-14 17:47:04.116305",
+ "modified": "2024-11-19 16:46:47.747401",
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "Budget Entry",

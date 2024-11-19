@@ -20,6 +20,7 @@ class ZeroBudget(Document):
 
         amended_from: DF.Link | None
         company: DF.Link | None
+        grand_total: DF.Int
         posting_date: DF.Date | None
         project: DF.Link | None
         total: DF.Currency

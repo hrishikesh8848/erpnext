@@ -17,7 +17,8 @@
   "section_break_lp3o",
   "total_increment_budget",
   "total_decrement_budget",
-  "amended_from"
+  "amended_from",
+  "total"
  ],
  "fields": [
   {
@@ -83,6 +84,12 @@
    "print_hide": 1,
    "read_only": 1,
    "search_index": 1
+  },
+  {
+   "fieldname": "total",
+   "fieldtype": "Int",
+   "hidden": 1,
+   "label": "Total"
   }
  ],
  "index_web_pages_for_search": 1,
@@ -93,7 +100,7 @@
    "link_fieldname": "voucher_no"
   }
  ],
- "modified": "2024-11-11 12:25:03.392137",
+ "modified": "2024-11-19 16:41:33.269129",
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "Budget Amendment",

@@ -1,3 +1,5 @@
+// Budget Transfer
+
 frappe.ui.form.on("Budget Transfer", {
     onload: function(frm) {
         // Set query for 'project' field without any specific filter

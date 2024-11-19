@@ -22,7 +22,8 @@
   "applicable_on_booking_actual_expenses",
   "action_if_accumulated_monthly_budget_exceeded_on_actual",
   "distribution_section",
-  "monthly_distribution"
+  "monthly_distribution",
+  "total"
  ],
  "fields": [
   {
@@ -125,11 +126,17 @@
    "fieldtype": "Currency",
    "label": "WBS Available Budget",
    "read_only": 1
+  },
+  {
+   "fieldname": "total",
+   "fieldtype": "Int",
+   "hidden": 1,
+   "label": "Total"
   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2024-11-12 17:06:58.193383",
+ "modified": "2024-11-19 16:45:37.661637",
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "WBS Monthly Distribution",

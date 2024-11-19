@@ -1,6 +1,6 @@
 // Copyright (c) 2024, Frappe Technologies Pvt. Ltd. and contributors
 // For license information, please see license.txt
-
+// Wbs Budget
 frappe.ui.form.on("WBS Budget", {
     onload: function(frm) {
         // Add custom button to fetch accounts

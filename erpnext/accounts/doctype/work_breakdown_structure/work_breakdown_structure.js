@@ -1,3 +1,4 @@
+// work_breakdown_structure
 frappe.ui.form.on("Work Breakdown Structure", {
     is_group: function(frm) {
         toggle_gl_account(frm);
