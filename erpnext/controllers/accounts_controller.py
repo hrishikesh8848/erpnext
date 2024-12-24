@@ -2979,7 +2979,7 @@ def get_common_query(
 		q = q.where(
 			account_condition
 			| (
-				(payment_entry[field] == default_advance_account)
+				(payment_entry[field] == field)
 				& (payment_entry.book_advance_payments_in_separate_party_account == 1)
 			)
 		)

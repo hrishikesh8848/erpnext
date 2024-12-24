@@ -9,6 +9,7 @@ from frappe.custom.doctype.property_setter.property_setter import make_property_
 from frappe.test_runner import make_test_objects
 from frappe.tests.utils import FrappeTestCase, change_settings
 from frappe.utils import add_days, today
+import re
 
 from erpnext.controllers.item_variant import (
 	InvalidItemAttributeValueError,
@@ -636,15 +637,32 @@ class TestItem(FrappeTestCase):
 			self.assertTrue(count >= 0)
 
 	def test_index_creation(self):
-		"check if index is getting created in db"
+		"Check if specific columns have indexes in the database"
 
-		indices = frappe.db.sql("show index from tabItem", as_dict=1)
+		# Query to retrieve all indexed columns for the `tabItem` table (converted to lowercase)
+		indices = frappe.db.sql("""
+			SELECT
+				a.attname AS column_name
+			FROM
+				pg_index i
+			JOIN
+				pg_attribute a ON a.attnum = ANY(i.indkey)
+			WHERE
+				i.indrelid = '"tabItem"'::regclass
+		""", as_dict=1)
+
+		# Collect indexed columns
+		indexed_columns = {index["column_name"] for index in indices}
+
+		# Set of columns we expect to have indexes
 		expected_columns = {"item_code", "item_name", "item_group"}
-		for index in indices:
-			expected_columns.discard(index.get("Column_name"))
 
-		if expected_columns:
-			self.fail(f"Expected db index on these columns: {', '.join(expected_columns)}")
+		# Check for missing indexes
+		missing_columns = expected_columns - indexed_columns
+		if missing_columns:
+			self.fail(f"Expected database indexes on these columns: {', '.join(missing_columns)}")
+
+
 
 	def test_attribute_completions(self):
 		expected_attrs = {"Small", "Extra Small", "Extra Large", "Large", "2XL", "Medium"}
