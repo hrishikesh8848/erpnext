@@ -1733,7 +1733,7 @@ class TestPurchaseOrder(FrappeTestCase):
 		self.assertEqual(pi_item.rate, 117)
 		self.assertEqual(pi_item.amount, 117)
 
-	def test_po_with_pricing_rule_TC_B_046(self):
+	def test_po_with_pricing_rule_TC_B_047(self):
 		# Scenario : PO => Pricing Rule => PR 
 		
 		po_data = {
@@ -2015,9 +2015,3 @@ def check_payment_gl_entries(
 	for row in range(len(expected_gle)):
 		for field in ["account", "debit", "credit"]:
 			self.assertEqual(expected_gle[row][field], gl_entries[row][field])
-
-@frappe.whitelist()
-def run_tests():
-	pur_test_obj = TestPurchaseOrder()
-	pur_test_obj.test_po_with_pricing_rule_TC_B_046()
-	return 1
