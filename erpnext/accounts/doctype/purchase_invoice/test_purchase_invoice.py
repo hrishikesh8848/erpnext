@@ -3177,6 +3177,72 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 		pi_status = frappe.db.get_value("Purchase Invoice", pi.name, "status")
 		self.assertEqual(pi_status, "Paid")
 
+	def test_pi_ignore_pricing_rule_TC_B_051(self):
+		company = "_Test Company"
+		item_code = "Testing-31"
+		target_warehouse = "Stores - _TC"
+		supplier = "_Test Supplier 1"
+		item_price = 130
+		if not frappe.db.exists("Item", item_code):
+			frappe.get_doc({
+				"doctype": "Item",
+				"item_code": item_code,
+				"item_name": item_code,
+				"is_stock_item": 1,
+				"is_purchase_item": 1,
+				"is_sales_item": 0,
+				"company": company
+			}).insert()
+		if not frappe.db.exists("Item Price", {"item_code": item_code, "price_list": "Standard Buying"}):
+			frappe.get_doc({
+				"doctype": "Item Price",
+				"price_list": "Standard Buying",
+				"item_code": item_code,
+				"price_list_rate": item_price
+			}).insert()
+		if not frappe.db.exists("Pricing Rule", {"title": "10% Discount"}):
+			frappe.get_doc({
+				"doctype": "Pricing Rule",
+				"title": "10% Discount",
+				"company": company,
+				"apply_on": "Item Code",
+				"items": [
+					{
+						"item_code": item_code
+					}
+				],
+				"rate_or_discount": "Discount Percentage",
+				"discount_percentage": 10,
+				"selling": 0,
+				"buying": 1
+			}).insert()
+		pi = frappe.get_doc({
+			"doctype": "Purchase Invoice",
+			"supplier": supplier,
+			"company": company,
+			"posting_date": today(),
+			"set_warehouse": target_warehouse,
+			"items": [
+				{
+					"item_code": item_code,
+					"warehouse": target_warehouse,
+					"qty": 1
+				}
+			]
+		})
+		pi.insert()
+		self.assertEqual(len(pi.items), 1)
+		self.assertEqual(pi.items[0].rate, 117)
+		self.assertEqual(pi.items[0].discount_percentage, 10)
+		pi.ignore_pricing_rule = 1
+		pi.save()
+		self.assertEqual(pi.items[0].rate, 130)
+		self.assertEqual(pi.items[0].discount_percentage, 0)
+		pi.submit()
+		self.assertEqual(pi.docstatus, 1)
+		self.assertEqual(pi.items[0].rate, 130)
+
+
 def set_advance_flag(company, flag, default_account):
 	frappe.db.set_value(
 		"Company",
