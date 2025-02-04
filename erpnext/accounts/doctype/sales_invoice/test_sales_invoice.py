@@ -6101,6 +6101,170 @@ class TestSalesInvoice(FrappeTestCase):
 		dun.reload()
 		
 		self.assertEqual(dun.grand_total, 1000.136986301)
+
+	def test_internal_goods_supply_TC_B_127(self):
+		# SO =>PO, SO => DN => PR, From DN => SI => PI (For goods)
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import make_test_item
+		from erpnext.selling.doctype.sales_order.sales_order import make_inter_company_purchase_order
+		from erpnext.stock.doctype.delivery_note.delivery_note import make_inter_company_purchase_receipt
+		from erpnext.stock.doctype.delivery_note.delivery_note import make_sales_invoice
+		from erpnext.accounts.doctype.sales_invoice.sales_invoice import make_inter_company_purchase_invoice
+		from erpnext.selling.doctype.sales_order.sales_order import make_delivery_note
+
+		get_required_data = create_company_and_supplier()
+
+		parent_company = get_required_data.get("parent_company")
+		child_company = get_required_data.get("child_company")
+		supplier = get_required_data.get("supplier")
+		customer = get_required_data.get("customer")
+		price_list = get_required_data.get("price_list")
+		item = make_test_item("test_service")
+
+		so = frappe.get_doc(
+			{
+				"doctype": "Sales Order",
+				"company": parent_company,
+				"customer": customer,
+				"transaction_date": today(),
+				"set_warehouse": "Stores - TC-1",
+				"selling_price_list": price_list,
+				"items": [
+					{
+						"item_code": item.item_code,
+						"qty": 1,
+						"rate": 1000,
+						"delivery_date": today()
+					}
+				]
+			}
+		)
+		so.insert()
+		so.submit()
+		self.assertEqual(so.docstatus, 1)
+		self.assertEqual(so.total, 1000)
+		self.assertEqual(so.total_taxes_and_charges, 180)
+		self.assertEqual(so.grand_total, 1180)
+
+		po = make_inter_company_purchase_order(so.name)
+		po.schedule_date = today()
+		po.set_warehouse = "Stores - TC-3"
+
+		po.insert()
+		po.submit()
+
+		self.assertEqual(po.docstatus, 1)
+		self.assertEqual(po.total, 1000)
+		self.assertEqual(po.total_taxes_and_charges, 180)
+		self.assertEqual(po.grand_total, 1180)
+
+		make_stock_entry(company = parent_company, target = "Stores - TC-1", qty = 10, rate = 1000)
+
+		dn = make_delivery_note(so.name)
+		dn.insert()
+		dn.submit()
+
+		self.assertEqual(dn.docstatus, 1)
+		self.assertEqual(dn.total, 1000)
+		self.assertEqual(dn.total_taxes_and_charges, 180)
+		self.assertEqual(dn.grand_total, 1180)
+
+		get_dn_stock_ledger = frappe.get_all(
+			"Stock Ledger Entry",
+			{
+				"voucher_type": "Delivery Note",
+				"voucher_no": dn.name
+			},
+			[
+				"warehouse",
+				"actual_qty"
+			]
+		)
+		self.assertEqual(get_dn_stock_ledger[0].get("warehouse"), "Stores - TC-1")
+		self.assertEqual(get_dn_stock_ledger[0].get("actual_qty"), -1)
+
+		dn_gle_entries = frappe.get_all("GL Entry", filters={"voucher_no": dn.name}, fields=["account", "debit", "credit"])
+		expected_si_entries = {
+			"Cost of Goods Sold - TC-1": {"debit": 1000, "credit": 0},
+			"Stock In Hand - TC-1": {"debit": 0, "credit": 1000},
+		}
+		for entry in dn_gle_entries:
+			self.assertEqual(entry["debit"], expected_si_entries.get(entry["account"], {}).get("debit", 0))
+			self.assertEqual(entry["credit"], expected_si_entries.get(entry["account"], {}).get("credit", 0))
+
+
+		pr = make_inter_company_purchase_receipt(dn.name)
+		pr.insert()
+		pr.submit()
+
+		self.assertEqual(pr.docstatus, 1)
+		self.assertEqual(pr.total, 1000)
+		self.assertEqual(pr.total_taxes_and_charges, 180)
+		self.assertEqual(pr.grand_total, 1180)
+
+		get_pr_stock_ledger = frappe.get_all(
+			"Stock Ledger Entry",
+			{
+				"voucher_type": "Purchase Receipt",
+				"voucher_no": pr.name
+			},
+			[
+				"warehouse",
+				"actual_qty"
+			]
+		)
+		self.assertEqual(get_pr_stock_ledger[0].get("warehouse"), "Stores - TC-3")
+		self.assertEqual(get_pr_stock_ledger[0].get("actual_qty"), 1)
+
+		pr_gle_entries = frappe.get_all("GL Entry", filters={"voucher_no": pr.name}, fields=["account", "debit", "credit"])
+		expected_si_entries = {
+			"Stock In Hand - TC-3": {"debit": 1000, "credit": 0},
+			"Stock Received But Not Billed - TC-3": {"debit": 0, "credit": 1000},
+		}
+		for entry in pr_gle_entries:
+			self.assertEqual(entry["debit"], expected_si_entries.get(entry["account"], {}).get("debit", 0))
+			self.assertEqual(entry["credit"], expected_si_entries.get(entry["account"], {}).get("credit", 0))
+
+		si = make_sales_invoice(dn.name)
+		si.insert()
+		si.submit()
+
+		self.assertEqual(si.docstatus, 1)
+		self.assertEqual(si.total, 1000)
+		self.assertEqual(si.total_taxes_and_charges, 180)
+		self.assertEqual(si.grand_total, 1180)
+
+		si_gle_entries = frappe.get_all("GL Entry", filters={"voucher_no": si.name}, fields=["account", "debit", "credit"])
+		expected_si_entries = {
+			"Debtors - TC-1": {"debit": 1180, "credit": 0},
+			"Output Tax CGST - TC-1": {"debit": 0, "credit": 90},
+			"Output Tax SGST - TC-1": {"debit": 0, "credit": 90},
+			"Sales - TC-1": {"debit": 0, "credit": 1000},
+		}
+		for entry in si_gle_entries:
+			self.assertEqual(entry["debit"], expected_si_entries.get(entry["account"], {}).get("debit", 0))
+			self.assertEqual(entry["credit"], expected_si_entries.get(entry["account"], {}).get("credit", 0))
+
+		pi = make_inter_company_purchase_invoice(si.name)
+		pi.bill_no = "test bill"
+		pi.insert()
+		pi.submit()
+
+		self.assertEqual(pi.docstatus, 1)
+		self.assertEqual(pi.total, 1000)
+		self.assertEqual(pi.total_taxes_and_charges, 180)
+		self.assertEqual(pi.grand_total, 1180)
+
+		pi_gle_entries = frappe.get_all("GL Entry", filters={"voucher_no": pi.name}, fields=["account", "debit", "credit"])
+		expected_pi_entries = {
+			"Stock Received But Not Billed - TC-3": {"debit": 1000, "credit": 0},
+			"Input Tax CGST - TC-3": {"debit": 90, "credit": 0},
+			"Input Tax SGST - TC-3": {"debit": 90, "credit": 0},
+			"Creditors - TC-3": {"debit": 0, "credit": 1180},
+		}
+		for entry in pi_gle_entries:
+			self.assertEqual(entry["debit"], expected_pi_entries.get(entry["account"], {}).get("debit", 0))
+			self.assertEqual(entry["credit"], expected_pi_entries.get(entry["account"], {}).get("credit", 0))
+
   
 def set_advance_flag(company, flag, default_account):
 	frappe.db.set_value(

@@ -283,9 +283,20 @@ frappe.ui.form.on("Bank Reconciliation Tool ERPNext", {
 	},
 	from_date: function (frm) {
 		frm.trigger("get_account_opening_balance");
+		frm.doc.from_statement_date = frm.doc.from_date;
+		// frm.doc.to_statement_date = today;
+		frm.doc.from_erp_date = frm.doc.from_date;
+		// frm.doc.to_erp_date = today;
+		frm.refresh_field("from_statement_date")
+		frm.refresh_field("from_erp_date")
+
 	},
 	to_date: function (frm) {
 		frm.trigger("get_account_opening_balance");
+		frm.doc.to_statement_date = frm.doc.to_date;
+		frm.doc.to_erp_date = frm.doc.to_date;;
+		frm.refresh_field("to_statement_date")
+		frm.refresh_field("to_erp_date")
 	},
 	// make_reconciliation_tool(frm) {
 	// 	frm.get_field("reconciliation_tool_cards").$wrapper.empty();

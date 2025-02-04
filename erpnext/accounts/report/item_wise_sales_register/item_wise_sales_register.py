@@ -138,7 +138,7 @@ def _execute(filters=None, additional_table_columns=None, additional_conditions=
 		data.append(row)
 
 	if filters.get("group_by") and item_list:
-		total_row = total_row_map.get(prev_group_by_value) or total_row_map.get()
+		total_row = total_row_map.get(prev_group_by_value) or total_row_map.get(d.get("item_name"))
 		total_row["percent_gt"] = flt(total_row["total"] / grand_total * 100)
 		data.append(total_row)
 		data.append({})
