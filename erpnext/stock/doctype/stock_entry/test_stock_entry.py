@@ -2078,6 +2078,113 @@ class TestStockEntry(FrappeTestCase):
 
 		return se
 
+	def test_stock_enrty_with_batch_TC_SCK_076(self):
+		fields = {
+			"is_stock_item": 1, 
+			"has_batch_no":1,
+			"create_new_batch":1,
+			"batch_number_series":"ABC.##"
+
+		}
+		if frappe.db.has_column("Item", "gst_hsn_code"):
+			fields["gst_hsn_code"] = "01011010"
+
+		item = make_item("_Test Batch Item", properties=fields).name
+		se = make_stock_entry(item_code=item, qty=10, rate=100, target="_Test Warehouse - _TC",purpose="Material Receipt")
+
+		batch = frappe.get_all('Batch',filters={'item': item,"reference_name":se.name},fields=['name',"batch_qty",'item',"reference_name"])
+		
+		self.assertEqual(len(batch), 1)
+		self.assertEqual(batch[0]['item'], item)
+		self.assertEqual(batch[0]['batch_qty'], 10)
+		self.assertEqual(batch[0]['reference_name'], se.name)
+
+	def test_stock_enrty_with_serial_and_batch_TC_SCK_077(self):
+		fields = {
+			"is_stock_item": 1, 
+			"has_batch_no":1,
+			"create_new_batch":1,
+			"batch_number_series":"ABC.##",
+			"has_serial_no":1,
+			"serial_no_series":"AAB.##"
+
+		}
+		if frappe.db.has_column("Item", "gst_hsn_code"):
+			fields["gst_hsn_code"] = "01011010"
+
+		item = make_item("_Test Batch Item", properties=fields).name
+		se = make_stock_entry(item_code=item, qty=5, rate=100, target="_Test Warehouse - _TC",purpose="Material Receipt")
+
+		batch = frappe.get_all('Batch',filters={'item': item,"reference_name":se.name},fields=['name',"batch_qty",'item',"reference_name"])
+
+		serial_no = frappe.get_all('Serial No',filters={'item_code': item,"purchase_document_no":se.name},fields=['name',"batch_no",'item_code',"purchase_document_no"])
+
+		
+		self.assertEqual(len(batch), 1)
+		self.assertEqual(batch[0]['item'], item)
+		self.assertEqual(batch[0]['batch_qty'], 5)
+		self.assertEqual(batch[0]['reference_name'], se.name)
+
+		self.assertEqual(len(serial_no), 5, "Serial number count mismatch")
+		for serial in serial_no:
+			self.assertEqual(serial['item_code'], item)
+			self.assertEqual(serial['purchase_document_no'], se.name)
+			self.assertEqual(serial['batch_no'], batch[0]['name'])
+
+	def test_stock_entry_for_multiple_items_with_serial_batch_no_TC_SCK_078(self):
+		fields = {
+			"is_stock_item": 1, 
+			"has_batch_no": 1,
+			"create_new_batch": 1,
+			"batch_number_series": "ABC.##",
+			"has_serial_no": 1,
+			"serial_no_series": "AAB.##"
+		}
+
+		if frappe.db.has_column("Item", "gst_hsn_code"):
+			fields["gst_hsn_code"] = "01011010"
+
+		item_1 = make_item("_Test Batch Item 1", properties=fields).name
+		item_2 = make_item("_Test Batch Item 2", properties=fields).name
+
+		se = make_stock_entry(
+			item_code=item_1, qty=5, rate=100, target="_Test Warehouse - _TC",
+			purpose="Material Receipt", do_not_save=True
+		)
+
+		se.append("items", {
+			"item_code": item_2,
+			"qty": 5,
+			"basic_rate": 150,
+			"t_warehouse": "_Test Warehouse - _TC"
+		})
+
+		se.save()
+		se.submit()
+
+		for item, expected_qty in [(item_1, 5), (item_2, 5)]:
+			batch = frappe.get_all(
+				'Batch',
+				filters={'item': item, "reference_name": se.name},
+				fields=['name', "batch_qty", 'item', "reference_name"]
+			)
+
+			serial_no = frappe.get_all(
+				'Serial No',
+				filters={'item_code': item, "purchase_document_no": se.name},
+				fields=['name', "batch_no", 'item_code', "purchase_document_no"]
+			)
+
+			self.assertEqual(len(batch), 1, f"Batch record mismatch for {item}")
+			self.assertEqual(batch[0]['item'], item)
+			self.assertEqual(batch[0]['batch_qty'], expected_qty)
+			self.assertEqual(batch[0]['reference_name'], se.name)
+
+			self.assertEqual(len(serial_no), expected_qty, f"Serial number count mismatch for {item}")
+			for serial in serial_no:
+				self.assertEqual(serial['item_code'], item)
+				self.assertEqual(serial['purchase_document_no'], se.name)
+				self.assertEqual(serial['batch_no'], batch[0]['name'])
 
 def create_bom(bom_item, rm_items, company=None, qty=None, properties=None):
 		bom = frappe.new_doc("BOM")
