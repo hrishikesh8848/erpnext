@@ -7015,19 +7015,39 @@ class TestPurchaseOrder(FrappeTestCase):
 
 		pe = get_payment_entry(pi.doctype, pi.name, bank_account=pi.credit_to)
 		pe.mode_of_payment = "Bank Draft"
-		pe.posting_date = add_days(pi.posting_date, 1)
+		pe.posting_date = add_days(today(), 1)
 		pe.bank_account = bank_account.name
 		pe.paid_from = "Cash - _TC"
 		pe.paid_from_account_currency = "INR"
 		pe.reference_no = "123"
 		pe.reference_date = nowdate()
 		pe.paid_to_account_currency = pi.currency
-		pe.target_exchange_rate = 60
 		pe.source_exchange_rate = 60
 		pe.paid_amount = pi.grand_total
 		pe.save(ignore_permissions=True)
 		pe.submit()
+	
+		err = frappe.new_doc("Exchange Rate Revaluation")
+		err.company = company.name
+		err.posting_date = today()
+		accounts = err.get_accounts_data()
+		err.extend("accounts", accounts)
+		row = err.accounts[0]
+		row.new_exchange_rate = 60
+		row.new_balance_in_base_currency = flt(row.new_exchange_rate * flt(row.balance_in_account_currency))
+		row.gain_loss = row.new_balance_in_base_currency - flt(row.balance_in_base_currency)
+		err.set_total_gain_loss()
+		err = err.save().submit()
 
+		# Create JV for ERR
+		err_journals = err.make_jv_entries()
+		je = frappe.get_doc("Journal Entry", err_journals.get("revaluation_jv"))
+		je = je.submit()
+
+		je.reload()
+		self.assertEqual(je.voucher_type, "Exchange Rate Revaluation")
+		self.assertEqual(je.total_debit, 1000.11)
+		self.assertEqual(je.total_credit, 1000.11)
 
 	def test_po_with_environmental_cess_pr_pi_TC_B_138(self):
 		from erpnext.buying.doctype.purchase_order.purchase_order import make_purchase_receipt
