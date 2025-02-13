@@ -6422,9 +6422,10 @@ class TestPurchaseOrder(FrappeTestCase):
 					self.assertEqual(entry["credit"], expected_pi_entries[entry["account"]])
 
 	def test_apply_discount_percentage_on_price_list_rate_po_pr_pi_TC_B_123(self):
+		frappe.set_user("Administrator")
 		company = "_Test Company"
 		supplier = "_Test Supplier 1"
-		item_code = "Testing-31"
+		item = make_test_item("Testing-31")
 		target_warehouse = "Stores - _TC"
 
 		po = frappe.get_doc({
@@ -6434,7 +6435,7 @@ class TestPurchaseOrder(FrappeTestCase):
 			"schedule_date": today(),
 			"items": [
 				{
-					"item_code": item_code,
+					"item_code": item.item_code,
 					"qty": 10,
 					"price_list_rate": 100,
 					"discount_percentage": 10
@@ -6449,22 +6450,7 @@ class TestPurchaseOrder(FrappeTestCase):
 		self.assertEqual(po.total, 900)
 		self.assertEqual(po.grand_total, 900)
 
-		pr = frappe.get_doc({
-			"doctype": "Purchase Receipt",
-			"supplier": supplier,
-			"company": company,
-			"items": [
-				{
-					"item_code": item_code,
-					"qty": 10,
-					"price_list_rate": 100,
-					"discount_percentage": 10,
-					"warehouse": target_warehouse,
-					"purchase_order": po.name
-				}
-			]
-		})
-		pr.items[0].rate = pr.items[0].price_list_rate - pr.items[0].discount_percentage
+		pr = make_purchase_receipt(po.name)
 		pr.insert()
 		pr.submit()
 		self.assertEqual(pr.docstatus, 1)
@@ -6483,22 +6469,7 @@ class TestPurchaseOrder(FrappeTestCase):
 				if entry["credit"]:
 					self.assertEqual(entry["credit"], expected_pr_entries[entry["account"]])
 
-		pi = frappe.get_doc({
-			"doctype": "Purchase Invoice",
-			"supplier": supplier,
-			"company": company,
-			"items": [
-				{
-					"item_code": item_code,
-					"qty": 10,
-					"price_list_rate": 100,
-					"discount_percentage": 10,
-					"warehouse": target_warehouse,
-					"purchase_receipt": pr.name
-				}
-			]
-		})
-		pi.items[0].rate = pi.items[0].price_list_rate - pi.items[0].discount_percentage
+		pi = make_purchase_invoice(pr.name)
 		pi.insert()
 		pi.submit()
 		self.assertEqual(pi.docstatus, 1)
