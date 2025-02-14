@@ -93,14 +93,14 @@ class GLEntry(Document):
 			self.validate_party()
 			self.validate_currency()
 
-
+	
 	def after_insert(self): #For Open Item Reconciliation Feature
 		total_amt = 0.0
 		if self.debit_in_account_currency > 0.0:
 			total_amt = self.debit_in_account_currency
 		elif self.credit_in_account_currency > 0.0:
 			total_amt = self.credit_in_account_currency
-		
+
 		reconciled_amt = self.reconciled_amount if self.reconciled_amount else 0.0
 		unreconciled_amount = total_amt - reconciled_amt
 
@@ -296,7 +296,7 @@ class GLEntry(Document):
 	def validate_currency(self):
 		if self.is_cancelled:
 			return
-		
+
 		company_currency = erpnext.get_company_currency(self.company)
 		account_currency = get_account_currency(self.account)
 
@@ -494,7 +494,7 @@ def update_gl_entry_once(): #For Open Item reconciliation Feature.
                         total_amt = self.debit_in_account_currency
                     elif self.credit_in_account_currency > 0.0:
                         total_amt = self.credit_in_account_currency
-                    
+
                     reconciled_amt = self.reconciled_amount if self.reconciled_amount else 0.0
                     unreconciled_amount = total_amt - reconciled_amt
 
