@@ -6200,7 +6200,9 @@ class TestMaterialRequest(FrappeTestCase):
 		supplier = "_Test Supplier 1"
 		item_code = "_Test Item With Serial No"
 		quantity = 3
-
+		existing_serials = frappe.get_all("Serial No", filters={"item_code": item_code}, pluck="name")
+		for serial in existing_serials:
+			frappe.delete_doc("Serial No", serial)
 		if not frappe.db.exists("Item", item_code):
 			item = frappe.get_doc({
 				"doctype": "Item",
