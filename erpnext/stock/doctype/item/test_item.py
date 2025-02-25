@@ -1110,7 +1110,6 @@ class TestItem(FrappeTestCase):
 		wo.reload()
 		wo.alternate_item = alt_item.name
 		wo.save()
-
 		self.assertEqual(wo.alternate_item, alt_item.name, "Alternative item not found in Work Order")
 	
 	@change_settings("Stock Settings", {"valuation_method": "FIFO"})
@@ -1199,7 +1198,7 @@ class TestItem(FrappeTestCase):
 
 		wo.submit()
 		self.assertTrue(frappe.db.exists("Work Order", wo.name))
-
+		self.assertEqual(wo.alternate_item, alt_item.name, "Alternative item not found in Work Order")
 
 def set_item_variant_settings(fields):
 	doc = frappe.get_doc("Item Variant Settings")
