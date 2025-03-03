@@ -3996,6 +3996,7 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 			self.assertEquals(total_tax,rate.get('total_tax'))
 			self.assertEquals(total_amount,rate.get('total_amount'))
 	def test_direct_purchase_invoice_via_update_stock_TC_SCK_131(self):
+		from erpnext.buying.doctype.purchase_order.test_purchase_order import create_fiscal_with_company
 		# Create Purchase Invoice with Update Stock
 		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_company
 		from datetime import datetime
@@ -4003,9 +4004,12 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 		create_supplier(supplier_name=" _Test Supplier 1")
 		company = "_Test Company"
 		create_item("Book",warehouse='Stores - _C')
-		fiscal_year = frappe.get_doc('Fiscal Year', '2025')
-		fiscal_year.append("companies", {"company": "_Test Company"})
-		fiscal_year.save()
+		if frappe.db.exists("Fiscal Year", "2024-2025"):
+			fiscal_year = frappe.get_doc('Fiscal Year', '2024-2025')
+			fiscal_year.append("companies", {"company": "_Test Company"})
+			fiscal_year.save()
+		else:
+			create_fiscal_with_company("_Test Company")
 		cost_center = frappe.db.get_all('Cost Center',{'company':company,'is_group':0},"name")
 		pi = make_purchase_invoice(
 			supplier="_Test Supplier 1",
