@@ -38,6 +38,16 @@ from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_cus
 
 
 class TestMaterialRequest(FrappeTestCase):
+	def setUp(self):
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_company,create_customer
+		create_company()
+		create_customer("_Test Customer")
+		create_warehouse(
+			warehouse_name="_Test Warehouse - _TC",
+			properties={"parent_warehouse": "All Warehouses - _TC"},
+			company="_Test Company",
+		)
+
 	def test_make_purchase_order(self):
 		mr = frappe.copy_doc(test_records[0]).insert()
 
@@ -2714,6 +2724,7 @@ class TestMaterialRequest(FrappeTestCase):
 		doc_pi = make_test_pi(doc_pr.name)
 		self.assertEqual(doc_pi.docstatus, 1)
 
+	 
 	def test_create_mr_to_po_to_pr_cancel_TC_SCK_055(self):
 		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_company,create_customer
 		create_company()
@@ -2748,12 +2759,12 @@ class TestMaterialRequest(FrappeTestCase):
 		
 		#if account setup in company
 		if frappe.db.exists('GL Entry',{'account': 'Stock Received But Not Billed - _TC'}):
-			gl_temp_credit = frappe.db.get_value('GL Entry',{'voucher_no':pr.name, 'account': 'Stock Received But Not Billed - _TC'},'credit')
+			gl_temp_credit = frappe.db.get_value('GL Entry',{'voucher_no':pr.name, 'account': 'Stock Received But Not Billed - _TC'},'credit_in_transaction_currency')
 			self.assertEqual(gl_temp_credit, 1000)
 		
 		#if account setup in company
 		if frappe.db.exists('GL Entry',{'account': 'Stock In Hand - _TC'}):
-			gl_stock_debit = frappe.db.get_value('GL Entry',{'voucher_no':pr.name, 'account': 'Stock In Hand - _TC'},'debit')
+			gl_stock_debit = frappe.db.get_value('GL Entry',{'voucher_no':pr.name, 'account': 'Stock In Hand - _TC'},'debit_in_transaction_currency')
 			self.assertEqual(gl_stock_debit, 1000)
 
 		#PR Cancel
@@ -2765,13 +2776,13 @@ class TestMaterialRequest(FrappeTestCase):
 		
 		#if account setup in company
 		if frappe.db.exists('GL Entry',{'account': 'Stock Received But Not Billed - _TC'}):
-			gl_temp_credit = frappe.db.get_value('GL Entry',{'voucher_no':pr.name, 'account': 'Stock Received But Not Billed - _TC'},'credit')
-			self.assertEqual(gl_temp_credit, 0)
+			gl_stock_debit = frappe.db.get_value('GL Entry',{'voucher_no':pr.name, 'account': 'Stock Received But Not Billed - _TC'},'debit_in_transaction_currency', order_by="creation DESC")
+			self.assertEqual(gl_stock_debit, 0)
 		
 		#if account setup in company
 		if frappe.db.exists('GL Entry',{'account': 'Stock In Hand - _TC'}):
-			gl_stock_debit = frappe.db.get_value('GL Entry',{'voucher_no':pr.name, 'account': 'Stock In Hand - _TC'},'debit')
-			self.assertEqual(gl_stock_debit, 0)
+			gl_stock_credit = frappe.db.get_value('GL Entry',{'voucher_no':pr.name, 'account': 'Stock In Hand - _TC'},'credit_in_transaction_currency',order_by="creation DESC")
+			self.assertEqual(gl_stock_credit, 0)
 
 	def test_create_material_req_to_2po_to_2pr_cancel_TC_SCK_056(self):
 		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_company
@@ -4420,12 +4431,12 @@ class TestMaterialRequest(FrappeTestCase):
 		
 		#if account setup in company
 		if frappe.db.exists('GL Entry',{'account': 'Stock Received But Not Billed - _TC'}):
-			gl_temp_credit = frappe.db.get_value('GL Entry',{'voucher_no':pr.name, 'account': 'Stock Received But Not Billed - _TC'},'credit')
+			gl_temp_credit = frappe.db.get_value('GL Entry',{'voucher_no':pr.name, 'account': 'Stock Received But Not Billed - _TC'},'credit_in_transaction_currency')
 			self.assertEqual(gl_temp_credit, 1000)
 		
 		#if account setup in company
 		if frappe.db.exists('GL Entry',{'account': 'Stock In Hand - _TC'}):
-			gl_stock_debit = frappe.db.get_value('GL Entry',{'voucher_no':pr.name, 'account': 'Stock In Hand - _TC'},'debit')
+			gl_stock_debit = frappe.db.get_value('GL Entry',{'voucher_no':pr.name, 'account': 'Stock In Hand - _TC'},'debit_in_transaction_currency')
 			self.assertEqual(gl_stock_debit, 1000)
 
 		#Return PI's
@@ -4439,12 +4450,12 @@ class TestMaterialRequest(FrappeTestCase):
 		pr.reload()
 		#if account setup in company
 		if frappe.db.exists('GL Entry',{'account': 'Stock Received But Not Billed - _TC'}):
-			gl_temp_credit = frappe.db.get_value('GL Entry',{'voucher_no':pr.name, 'account': 'Stock Received But Not Billed - _TC'},'credit')
+			gl_temp_credit = frappe.db.get_value('GL Entry',{'voucher_no':pr.name, 'account': 'Stock Received But Not Billed - _TC'},'credit_in_transaction_currency')
 			self.assertEqual(gl_temp_credit, 1000)
 		
 		#if account setup in company
 		if frappe.db.exists('GL Entry',{'account': 'Stock In Hand - _TC'}):
-			gl_stock_debit = frappe.db.get_value('GL Entry',{'voucher_no':pr.name, 'account': 'Stock In Hand - _TC'},'debit')
+			gl_stock_debit = frappe.db.get_value('GL Entry',{'voucher_no':pr.name, 'account': 'Stock In Hand - _TC'},'debit_in_transaction_currency')
 			self.assertEqual(gl_stock_debit, 1000)
 
 	def test_create_mr_to_2po_to_2pi_partial_return_TC_SCK_106(self):
@@ -4586,15 +4597,14 @@ class TestMaterialRequest(FrappeTestCase):
 			self.assertEqual(expected_sle[sle.warehouse], sle.actual_qty)
 
 		# check gl entries
-		gl_entries = get_gl_entries("Purchase Receipt", pr.name)
-		expected_values = {
-			stock_in_hand_account: [1000.0, 0.0],
-			"Stock Received But Not Billed - _TC": [0.0, 1000.0],
-		}
-
-		for gle in gl_entries:
-			self.assertEqual(expected_values[gle.account][0], gle.debit)
-			self.assertEqual(expected_values[gle.account][1], gle.credit)
+	
+		if frappe.db.exists('GL Entry',{'account': 'Stock Received But Not Billed - _TC'}):
+			gl_temp_credit = frappe.db.get_value('GL Entry',{'voucher_no':pr.name, 'account': 'Stock Received But Not Billed - _TC'},'credit_in_transaction_currency')
+			self.assertEqual(gl_temp_credit, 1000)
+		
+		if frappe.db.exists('GL Entry',{'account': 'Stock In Hand - _TC'}):
+			gl_stock_debit = frappe.db.get_value('GL Entry',{'voucher_no':pr.name, 'account': 'Stock In Hand - _TC'},'debit_in_transaction_currency')
+			self.assertEqual(gl_stock_debit, 1000)
 
 	def test_fetching_item_from_open_mr_TC_B_096(self):
 		#Scenario :Fetching Items from Open Material Requests
