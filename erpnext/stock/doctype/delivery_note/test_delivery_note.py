@@ -2698,7 +2698,7 @@ class TestDeliveryNote(FrappeTestCase):
 			"item_name": "Ball point Pen",
 			"is_stock_item": 1,
 			"stock_uom": "Box",
-			"uoms": [{'uom': "Pcs", 'conversion_factor': 0.05}],
+			"uoms": [{'uom': "_Test UOM", 'conversion_factor': 0.05}],
 		}
 
 		dn_fields = {
@@ -2758,12 +2758,12 @@ class TestDeliveryNote(FrappeTestCase):
 		sle = frappe.get_doc("Stock Ledger Entry", {"voucher_no": doc_pr.name})
 		
 
-		customer = frappe.get_doc("Customer",{'customer_name':"SS Ltd"}).insert()
+		customer = frappe.get_doc("Customer",{'customer_name':"_Test Customer"}).insert()
 		target_warehouse = create_warehouse("_Test Warehouse", properties=None, company=dn_data['company'])
 		item = make_item("Ball point Pen", item_fields).name
 		dn = create_delivery_note(item_code=item, qty=30, uom="Pcs",stock_uom="Box", conversion_factor=0.05, company=dn_data['company'], customer=customer, warehouse=target_warehouse,do_not_submit=1)
 		
-		dn.items[0].uom = "Pcs"
+		dn.items[0].uom = "_Test UOM"
 		dn.items[0].conversion_factor = 0.05
 		
 		dn.save()
