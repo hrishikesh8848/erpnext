@@ -4521,7 +4521,7 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 		frappe.delete_doc("Budget", budget.name,force=1)
 		frappe.delete_doc("Purchase Order", pi.name,force=1)
 
-def test_trx_currency_debit_credit_for_high_precision(self):
+	def test_trx_currency_debit_credit_for_high_precision(self):
 		exc_rate = 0.737517516
 		pi = make_purchase_invoice(
 			currency="USD", conversion_rate=exc_rate, qty=1, rate=2000, do_not_save=True
@@ -4550,6 +4550,20 @@ def test_trx_currency_debit_credit_for_high_precision(self):
 			as_list=1,
 		)
 		self.assertEqual(actual, expected)
+
+	def test_prevents_fully_returned_invoice_with_zero_quantity(self):
+		from erpnext.controllers.sales_and_purchase_return import StockOverReturnError, make_return_doc
+
+		invoice = make_purchase_invoice(qty=10)
+
+		return_doc = make_return_doc(invoice.doctype, invoice.name)
+		return_doc.items[0].qty = -10
+		return_doc.save().submit()
+
+		return_doc = make_return_doc(invoice.doctype, invoice.name)
+		return_doc.items[0].qty = 0
+
+		self.assertRaises(StockOverReturnError, return_doc.save)
 		
 def set_advance_flag(company, flag, default_account):
 	frappe.db.set_value(
