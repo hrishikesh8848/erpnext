@@ -40,11 +40,12 @@ def validate_filters(filters):
 
 
 def get_data(filters):
+    is_projects_installed = "projects" in frappe.get_installed_apps()
     query_result = frappe.db.sql(
         f"""SELECT 
                 "tabPurchase Order"."transaction_date" AS "date",
                 "tabPurchase Order Item"."schedule_date" AS "required_date",
-                "tabPurchase Order Item"."project",
+                {'"tabPurchase Order Item"."project",' if is_projects_installed else ''}
                 "tabPurchase Order"."name" AS "purchase_order",
                 "tabPurchase Order"."status",
                 "tabPurchase Order"."supplier",
@@ -76,7 +77,7 @@ def get_data(filters):
             GROUP BY 
                 "tabPurchase Order"."transaction_date",
                 "tabPurchase Order Item"."schedule_date",
-                "tabPurchase Order Item"."project",
+                {'"tabPurchase Order Item"."project",' if is_projects_installed else ''}
                 "tabPurchase Order"."name",
                 "tabPurchase Order"."status",
                 "tabPurchase Order"."supplier",

@@ -3970,13 +3970,14 @@ class TestPurchaseReceipt(FrappeTestCase):
 		self.assertEqual(sl_entries[1].warehouse, warehouse2)
 
 	def test_purchase_order_and_receipt_TC_SCK_073(self):
+		create_supplier(supplier_name="_Test Supplier", default_currency="INR")
 		company = "_Test Indian Registered Company"
 		create_company(company)
 		item1 = make_item("ST-N-001", {"is_stock_item": 1, "gst_hsn_code": "01011010"})
 		item2 = make_item("W-N-001", {"is_stock_item": 1, "gst_hsn_code": "01011020"})
-		warehouse1 = create_warehouse("Raw Material - Iron Building - _TIRC", company=company)
+		warehouse1 = create_warehouse("Raw Material Iron Building - _TIRC", company=company)
 		warehouse2 = create_warehouse("Woods - _TIRC", company=company)
-		rejected_warehouse = create_warehouse("Rejection / Scrap - _TIRC", company=company)
+		rejected_warehouse = create_warehouse("Rejection Scrap - _TIRC", company=company)
 		posting_date = "2024-12-31"
 
 		# Create Purchase Order
