@@ -5944,8 +5944,14 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 		return sales_order
 
 	def create_and_submit_sales_order_with_gst(self, item_code, qty=None, rate=None):
-		create_test_warehouse(name= "Stores - _TIRC", warehouse_name="Stores", company="_Test Indian Registered Company")
-
+		from erpnext.stock.doctype.warehouse.test_warehouse import create_warehouse
+		from erpnext.stock.doctype.material_request.test_material_request import create_company
+		create_company("_Test Indian Registered Company")
+		create_warehouse(
+			warehouse_name="Stores - _TIRC",
+			properties={"parent_warehouse": "All Warehouses - _TIRC"},
+			company="_Test Company"
+		)
 		make_stock_entry(item_code="_Test Item", qty=10, rate=rate, target="Stores - _TIRC")
   
 		company = get_gst_details("Company", {"name": "_Test Indian Registered Company"})[0]
