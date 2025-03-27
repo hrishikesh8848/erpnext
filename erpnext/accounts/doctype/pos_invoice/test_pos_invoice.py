@@ -989,6 +989,7 @@ class TestPOSInvoice(unittest.TestCase):
 		pos_inv.append("payments", {"mode_of_payment": "Cash", "account": "Cash - _TC", "amount": 3500})
 		pos_inv.taxes_and_charges = "Output GST In-state - _TC"
 		pos_inv.save()
+		pos_inv.paid_amount = pos_inv.grand_total
 		pos_inv.submit()
 		closing_enrty= make_closing_entry_from_opening(opening_entry)
 		closing_enrty.submit()
@@ -1103,9 +1104,9 @@ class TestPOSInvoice(unittest.TestCase):
 		inv.from_date = frappe.utils.nowdate()
 		inv.to_date = inv.to_date = frappe.utils.add_days(inv.from_date, 5)
 		inv.append("payments", {"mode_of_payment": "Cash", "account": "Cash - _TC", "amount": inv.grand_total})
-		inv.paid_amount = inv.grand_total
 
 		inv.save()
+		inv.paid_amount = inv.grand_total
 		inv.submit()
 		
 		closing_enrty= make_closing_entry_from_opening(opening_entry)
@@ -1173,6 +1174,7 @@ class TestPOSInvoice(unittest.TestCase):
 			"payments",
 			{"mode_of_payment": "Cash", "account": "Cash - _TC", "amount": 10000 - inv.loyalty_amount},
 		)
+		inv.save()
 		inv.paid_amount = 10000 - inv.loyalty_amount
 		inv.submit()
 		self.assertEqual(inv.status, "Paid")
@@ -1206,11 +1208,11 @@ class TestPOSInvoice(unittest.TestCase):
 	
 	def test_pos_inoivce_retun_with_taxes_and_charges_TC_S_120(self):
 		inv = create_pos_invoice(rate=3000,do_not_save=1)
-		inv.save()
 		inv.append("payments", {"mode_of_payment": "Cash", "account": "Cash - _TC", "amount": inv.grand_total})
-		inv.paid_amount = inv.grand_total
 		inv.tax_category = "In-State"
 		inv.taxes_and_charges = "Output GST In-state - _TC"
+		inv.save()
+		inv.paid_amount = inv.grand_total
 		inv.submit()
 		self.assertEqual(inv.status, "Paid")
 
@@ -1263,6 +1265,7 @@ class TestPOSInvoice(unittest.TestCase):
 				"rate": 3000, 
 			 })
 		inv.append("payments", {"mode_of_payment": "Cash", "account": "Cash - _TC", "amount": inv.grand_total})
+		inv.save()
 		inv.paid_amount = inv.grand_total
 		inv.submit()
 		self.assertEqual(inv.status, "Paid")

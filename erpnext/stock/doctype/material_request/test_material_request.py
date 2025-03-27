@@ -3205,9 +3205,10 @@ class TestMaterialRequest(FrappeTestCase):
 
 	def test_mr_po_2pi_TC_SCK_083(self):
 		# MR =>  PO => 2PI
+		item = make_test_item("_test_item_1")
 		mr_dict_list = [{
 				"company" : "_Test Company",
-				"item_code" : "Testing-31",
+				"item_code" : item.item_code,
 				"warehouse" : "Stores - _TC",
 				"qty" : 10,
 				"rate" : 100,
@@ -4004,9 +4005,10 @@ class TestMaterialRequest(FrappeTestCase):
 
 	def test_mr_po_pi_return_TC_SCK_090(self):
 		# MR =>  PO => PI => Return
+		item = make_test_item("_test_item_1")
 		mr_dict_list = [{
 				"company" : "_Test Company",
-				"item_code" : "Testing-31",
+				"item_code" : item.item_code,
 				"warehouse" : "Stores - _TC",
 				"qty" : 10,
 				"rate" : 100,
@@ -8026,6 +8028,7 @@ def make_test_po(source_name, type = "Material Request", received_qty = 0, item_
 		args = frappe._dict(args)
 		doc_po.update(args)
 
+	doc_po.currency = "INR"
 	doc_po.insert()
 	doc_po.submit()
 	return doc_po

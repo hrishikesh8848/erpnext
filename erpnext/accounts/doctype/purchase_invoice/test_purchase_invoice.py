@@ -4096,12 +4096,11 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 		from erpnext.selling.doctype.sales_order.test_sales_order import get_or_create_fiscal_year
 		create_company()
 		parent_warehouse = frappe.db.get_value('Warehouse',{'is_group':1,'company':'_Test Company'},'name')
-		make_item("Book", {"is_stock_item": 1})
 		create_warehouse(
 			warehouse_name="_Test Warehouse 1 - _TC",
 			properties={"parent_warehouse": f"{parent_warehouse}"},
 			company="_Test Company",
-		)
+		) 
 		get_or_create_fiscal_year("_Test Company")
 		create_supplier(supplier_name="_Test Supplier 1")
 		warehouse = frappe.db.get_all('Warehouse',{'is_group':0,'company':'_Test Company'},['name'])
@@ -4109,7 +4108,7 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 		cost_center = frappe.db.get_all('Cost Center',{'company':'_Test Company'},['name'])
 		pi = make_purchase_invoice(
 			supplier="_Test Supplier 1",
-			item_code="Book",
+			item_code=create_item(item_code = "Book", warehouse=warehouse[-1].name, company="_Test Company").item_code,
 			qty=5,
 			update_stock=True,
 			warehouse=warehouse[-1].name,
