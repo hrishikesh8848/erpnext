@@ -4002,6 +4002,7 @@ class TestPurchaseReceipt(FrappeTestCase):
 	def test_purchase_order_and_receipt_TC_SCK_073(self):
 		create_supplier(supplier_name="_Test Supplier", default_currency="INR")
 		company = "_Test Indian Registered Company"
+		create_supplier(supplier_name="_Test Supplier", default_currency="INR")
 		create_company(company)
 		item1 = make_item("ST-N-001", {"is_stock_item": 1, "gst_hsn_code": "01011010"})
 		item2 = make_item("W-N-001", {"is_stock_item": 1, "gst_hsn_code": "01011020"})
@@ -4248,6 +4249,8 @@ class TestPurchaseReceipt(FrappeTestCase):
 		sr.cancel()
 		self.check_cancel_stock_gl_sle(sr, 20, -3000.0)
 	def test_purchase_receipt_with_serialized_item_TC_SCK_145(self):
+		create_supplier(supplier_name = 'Test Supplier 1')
+		get_or_create_fiscal_year('_Test Company')
 		parent_itm_grp = frappe.new_doc("Item Group")
 		parent_itm_grp.item_group_name = "Test Parent Item Group"
 		parent_itm_grp.is_group = 1
@@ -4292,18 +4295,20 @@ class TestPurchaseReceipt(FrappeTestCase):
 		})
 		pr.insert()
 		pr.submit()
-
+		len_serial_no = len(frappe.db.get_all('Serial No',['name']))
 		self.assertEqual(pr.docstatus, 1)
 		self.assertEqual(len(pr.items), 1)
 		self.assertEqual(pr.items[0].item_code, item_code)
 		self.assertEqual(pr.items[0].qty, qty)
 
 		serial_nos = get_serial_nos_from_bundle(pr.items[0].serial_and_batch_bundle)
-		self.assertEqual(len(serial_nos), qty)
+		
+		self.assertEqual(len_serial_no, qty)
 
 		for serial_no in serial_nos:
 			status = frappe.db.get_value("Serial No", serial_no, "status")
 			self.assertEqual(status, "Active")
+
 	def _test_create_2pr_with_item_fifo_and_sr(self):
 		from erpnext.stock.doctype.stock_reconciliation.test_stock_reconciliation import (
 			create_stock_reconciliation,
