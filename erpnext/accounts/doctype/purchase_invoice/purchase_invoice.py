@@ -859,10 +859,12 @@ class PurchaseInvoice(BuyingController):
 			"credit_in_transaction_currency": grand_total,
 			"against_voucher": against_voucher,
 			"against_voucher_type": self.doctype,
-			"project": self.project,
 			"cost_center": self.cost_center,
 			"_skip_merge": skip_merge,
 		}
+
+		if "projects" in frappe.get_installed_apps():
+			gl["project"] = self.project
 
 		if remarks:
 			gl["remarks"] = remarks
@@ -1066,7 +1068,7 @@ class PurchaseInvoice(BuyingController):
 									"debit": base_amount,
 									"debit_in_transaction_currency": amount,
 									"cost_center": item.cost_center,
-									"project": item.project or self.project,
+									"project": self.get("project") if "projects" in frappe.get_installed_apps() else "",
 								},
 								account_currency,
 								item=item,
@@ -1154,7 +1156,7 @@ class PurchaseInvoice(BuyingController):
 							item.item_tax_amount, item.precision("item_tax_amount")
 						)
 
-			if item.is_fixed_asset and item.landed_cost_voucher_amount:
+			if "assets" in frappe.get_installed_apps() and item.is_fixed_asset and item.landed_cost_voucher_amount:
 				self.update_gross_purchase_amount_for_linked_assets(item)
 
 	def get_provisional_accounts(self):

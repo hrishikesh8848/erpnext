@@ -6619,7 +6619,7 @@ def make_sales_order_workflow():
 def get_or_create_fiscal_year(company):
 	from datetime import datetime
 	current_date = datetime.today()
-	formatted_date = current_date.strftime("%d-%m-%Y")
+	formatted_date = current_date.strftime("%Y-%m-%d")
 	existing_fy = frappe.get_all(
 		"Fiscal Year",
 		filters={ 
