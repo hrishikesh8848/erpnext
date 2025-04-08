@@ -75,6 +75,12 @@ jobs:
         working-directory: /home/runner/frappe-bench
         run: |
           bench get-app erpnext https://github.com/8848digital/erpnext.git --branch pre-prod
+          bench get-app https://itananddigital:${{secrets.GH_PAT}}@github.com/8848digital/ERPNext-India.git --branch pre-prod
+          bench get-app https://github.com/nirav8848/india_compliance.git --branch pre-prod
+          bench get-app https://github.com/8848digital/Assets --branch pre-prod
+          bench get-app https://itananddigital:${{secrets.GH_PAT}}@github.com/8848digital/CRM --branch pre-prod
+          bench get-app https://itananddigital:${{secrets.GH_PAT}}@github.com/8848digital/projects.git --branch pre-prod
+          bench get-app https://itananddigital:${{secrets.GH_PAT}}@github.com/8848digital/sales_commission.git --branch pre-prod
           bench get-app --branch version-15 payments
           bench setup requirements --dev
       - name: Create Site
@@ -82,6 +88,13 @@ jobs:
         run: |
           bench new-site --db-type postgres --db-root-password root --admin-password admin test_site
           bench --site test_site install-app erpnext
+          bench --site test_site install-app erpnext_india
+          bench --site test_site install-app assets
+          bench --site test_site install-app erpnext_crm
+          bench --site test_site install-app projects
+          bench --site test_site install-app payments
+          bench --site test_site install-app sales_commission
+          bench --site test_site install-app india_compliance
           bench --site test_site install-app payments
       - name: Set Permissions & Configs
         working-directory: /home/runner/frappe-bench
