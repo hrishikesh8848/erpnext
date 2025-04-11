@@ -126,6 +126,7 @@ def get_linked_payments_for_doc(
 				(ple.against_voucher_no == _dn),
 				(ple.amount < 0),
 			]
+			
 
 			res = (
 				qb.from_(ple)

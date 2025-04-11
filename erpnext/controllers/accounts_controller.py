@@ -1539,6 +1539,7 @@ class AccountsController(TransactionBase):
 						)
 
 				for d in gain_loss_to_book:
+					frappe.log_error("d",d)
 					# Filter out References for which Gain/Loss is already booked
 					if d.exchange_gain_loss and (
 						(d.reference_doctype, d.reference_name, str(d.idx)) not in booked

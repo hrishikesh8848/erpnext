@@ -133,7 +133,10 @@ class PaymentEntry(AccountsController):
 					"reference_name": self.name,
 					"invoice_type": ref.reference_doctype,
 					"invoice_number": ref.reference_name,
-					"cost_center": self.cost_center
+					"cost_center": self.cost_center,
+					"currency":frappe.db.get_value("Account",ref.account,"account_currency"),
+					"difference_amount":ref.exchange_gain_loss,
+					"exchange_rate":ref.exchange_rate
 				}
 				pay_rec.append("allocation", allocation_data)
 
@@ -1233,6 +1236,7 @@ class PaymentEntry(AccountsController):
 		gl_entries = process_gl_map(gl_entries)
 		make_gl_entries(gl_entries, cancel=cancel, adv_adj=adv_adj, clearing_date=clearing_date)
 		if cancel:
+			# pass
 			cancel_exchange_gain_loss_journal(frappe._dict(doctype=self.doctype, name=self.name))
 		else:
 			self.make_exchange_gain_loss_journal()

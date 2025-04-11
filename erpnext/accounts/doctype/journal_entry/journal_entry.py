@@ -1001,6 +1001,7 @@ class JournalEntry(AccountsController):
 				merge_entries=merge_entries,
 				update_outstanding=update_outstanding,
 			)
+
 			if cancel:
 				cancel_exchange_gain_loss_journal(frappe._dict(doctype=self.doctype, name=self.name))
 
