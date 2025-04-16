@@ -56,7 +56,7 @@ def make_gl_entries(
 					)
 				)
 		else:
-			make_reverse_gl_entries(gl_map, adv_adj=adv_adj, update_outstanding=update_outstanding)
+			make_reverse_gl_entries(gl_map, adv_adj=adv_adj, update_outstanding=update_outstanding,clearing_date=clearing_date)
 
 
 def make_acc_dimensions_offsetting_entry(gl_map):
@@ -577,6 +577,7 @@ def make_reverse_gl_entries(
 	adv_adj=False,
 	update_outstanding="Yes",
 	partial_cancel=False,
+	clearing_date=None
 ):
 	"""
 	Get original gl entries of the voucher
@@ -603,6 +604,7 @@ def make_reverse_gl_entries(
 			adv_adj=adv_adj,
 			update_outstanding=update_outstanding,
 			partial_cancel=partial_cancel,
+			clearing_date=clearing_date
 		)
 		validate_accounting_period(gl_entries)
 		check_freezing_date(gl_entries[0]["posting_date"], adv_adj)

@@ -581,7 +581,6 @@ def reconcile_against_document(
 
         # Only update outstanding for newly linked vouchers
         for entry in entries:
-            frappe.log_error("entry",entry)
             update_voucher_outstanding(
                 entry.against_voucher_type,
                 entry.against_voucher,
@@ -895,7 +894,6 @@ def cancel_exchange_gain_loss_journal(
             referenced_dn=parent_doc.name,
             je_docstatus=1,
         )
-        # frappe.log_error("gain_loss_journals",gain_loss_journals)
         for doc in gain_loss_journals:
             gain_loss_je = frappe.get_doc("Journal Entry", doc)
             if referenced_dt and referenced_dn:
@@ -907,6 +905,10 @@ def cancel_exchange_gain_loss_journal(
                     and (referenced_dt, referenced_dn) in references
                     and (parent_doc.doctype, parent_doc.name) in references
                 ):
+                    get_parent=frappe.db.get_value("Payment Reconciliation Allocation Records",{"invoice_type":parent_doc.doctype,"invoice_number":parent_doc.name,
+											"reference_type":referenced_dt,"reference_name":referenced_dn},"parent")
+                    if get_parent:
+                        gain_loss_je.clearing_date=frappe.db.get_value("Payment Reconciliation Record",get_parent,"clearing_date")
                     # only cancel JE generated against parent_doc and referenced_dn
                     gain_loss_je.cancel()
             else:
@@ -1039,9 +1041,6 @@ def update_accounting_ledgers_after_reference_removal(
     if payment_name:
         gle_update_query = gle_update_query.where(gle.voucher_no == payment_name)
     gle_update_query.run()
-    frappe.log_error("ref_type",ref_type)
-    frappe.log_error("ref_no",ref_no)
-    # frappe.log_error("payment_name",payment_name)
     # Payment Ledger
     # if ref_type == "Journal Entry":
     #     ple = qb.DocType("Payment Ledger Entry")
@@ -1118,8 +1117,6 @@ def reverse_payment_ledger_entries(ref_type, ref_no):
         )
     ).run(as_dict=True)
 
-    # frappe.log_error("original_entries_pe",original_entries_pe)
-    # frappe.log_error("original_entries_si",original_entries_si)
 
     if not original_entries_pe:
         return "No matching Payment Ledger Entry found"
@@ -1128,7 +1125,6 @@ def reverse_payment_ledger_entries(ref_type, ref_no):
         return "No matching Payment Ledger Entry found"
 
     total_entries = original_entries_pe + original_entries_si
-    frappe.log_error("total_entries", total_entries)
     new_entries = []
     amount = 0
 
@@ -1182,7 +1178,6 @@ def reverse_payment_ledger_entries(ref_type, ref_no):
     #     (ref_type, ref_no, ref_no)
     # )
     # frappe.db.set_value("Sales Invoice", ref_no, {"outstanding_amount": amount})
-    # frappe.log_error("new_entries",new_entries)
 
     frappe.db.commit()
 
@@ -1441,14 +1436,6 @@ def get_outstanding_invoices(
     common_filter.append(ple.party == party)
 
     ple_query = QueryPaymentLedger()
-    # frappe.log_error("vouchers",vouchers)
-    # frappe.log_error("common_filter",common_filter)
-    # frappe.log_error("posting_date",posting_date)
-    # frappe.log_error("min_outstanding",min_outstanding)
-    # frappe.log_error("max_outstanding",max_outstanding)
-    # frappe.log_error("accounting_dimensions",accounting_dimensions)
-    # frappe.log_error("limit",limit)
-    # frappe.log_error("voucher_no",voucher_no)
 
     invoice_list = ple_query.get_voucher_outstandings(
         vouchers=vouchers,
@@ -1461,8 +1448,6 @@ def get_outstanding_invoices(
         limit=limit,
         voucher_no=voucher_no,
     )
-    # frappe.log_error("invoice_list",invoice_list)
-
     for d in invoice_list:
         payment_amount = (
             d.invoice_amount_in_account_currency - d.outstanding_in_account_currency
@@ -2338,6 +2323,7 @@ def create_payment_ledger_entry(
     from_repost=0,
     partial_cancel=False,
     reconcile=False,
+    clearing_date=None
 ):
     if gl_entries:
         ple_map = get_payment_ledger_entries(
@@ -2348,6 +2334,7 @@ def create_payment_ledger_entry(
             ple = frappe.get_doc(entry)
 
             if cancel:
+                ple.posting_date= clearing_date
                 delink_original_entry(ple, partial_cancel=partial_cancel)
 
             ple.flags.ignore_permissions = 1
@@ -2373,7 +2360,6 @@ def update_voucher_outstanding(voucher_type, voucher_no, account, party_type, pa
     ple_query = QueryPaymentLedger()
 
     # on cancellation outstanding can be an empty list
-    frappe.log_error("vouchers",vouchers)
     voucher_outstanding = ple_query.get_voucher_outstandings(
         vouchers, common_filter=common_filter
     )
@@ -2399,7 +2385,6 @@ def update_voucher_outstanding(voucher_type, voucher_no, account, party_type, pa
         )
 
         ref_doc.set_status(update=True)
-        # frappe.log_error("updated", outstanding["outstanding_in_account_currency"])
         ref_doc.notify_update()
 
 
@@ -2583,7 +2568,7 @@ class QueryPaymentLedger:
                 .limit(self.limit)
                 .run(debug=1)
             )
-            frappe.log_error("outstanding_vouchers in condition", outstanding_vouchers)
+            frappe.log_error("outstanding_vouchers d",outstanding_vouchers)
             if outstanding_vouchers:
                 filter_on_voucher_no.append(
                     ple.voucher_no.isin([x[0] for x in outstanding_vouchers])
@@ -2591,9 +2576,6 @@ class QueryPaymentLedger:
                 filter_on_against_voucher_no.append(
                     ple.against_voucher_no.isin([x[0] for x in outstanding_vouchers])
                 )
-
-                # frappe.log_error("filter_on_voucher_no",filter_on_voucher_no)
-                # frappe.log_error("filter_on_against_voucher_no",filter_on_against_voucher_no)
 
 
         # Define a CTE for fully reconciled vouchers
@@ -2660,7 +2642,9 @@ class QueryPaymentLedger:
                 ple.remarks,
             )
         )
-        frappe.log_error("query_voucher_amount out", query_voucher_amount)
+
+        frappe.log_error("query_voucher_amount",query_voucher_amount)
+
 
         # Query for voucher outstanding
         query_voucher_outstanding = (
@@ -2706,7 +2690,8 @@ class QueryPaymentLedger:
                 != 0  # Only show partially or unpaid invoices
             )
         )
-        frappe.log_error("query_voucher_outstanding out", query_voucher_outstanding)
+
+        frappe.log_error("query_voucher_outstanding",query_voucher_outstanding)
 
         # Combine voucher amount and outstanding using a CTE
         self.cte_query_voucher_amount_and_outstanding = (
@@ -2786,7 +2771,7 @@ class QueryPaymentLedger:
                     (Table("outstanding").amount_in_account_currency > 0)
                 )
             )
-
+ 
         # Filter for payments
         elif self.get_payments:
             self.cte_query_voucher_amount_and_outstanding = (
@@ -2800,12 +2785,6 @@ class QueryPaymentLedger:
             self.cte_query_voucher_amount_and_outstanding = (
                 self.cte_query_voucher_amount_and_outstanding.limit(self.limit)
             )
-
-        # execute SQL
-        # frappe.log_error(
-        #     "self.cte_query_voucher_amount_and_outstanding",
-        #     self.cte_query_voucher_amount_and_outstanding,
-        # )
 
         self.voucher_outstandings = self.cte_query_voucher_amount_and_outstanding.run(
             as_dict=True,debug=1

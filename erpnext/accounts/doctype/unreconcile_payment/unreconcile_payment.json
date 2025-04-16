@@ -9,9 +9,12 @@
   "company",
   "voucher_type",
   "voucher_no",
+  "column_break_idrn",
+  "clearing_date",
+  "amended_from",
   "get_allocations",
-  "allocations",
-  "amended_from"
+  "section_break_wvvj",
+  "allocations"
  ],
  "fields": [
   {
@@ -51,12 +54,25 @@
    "fieldtype": "Table",
    "label": "Allocations",
    "options": "Unreconcile Payment Entries"
+  },
+  {
+   "fieldname": "clearing_date",
+   "fieldtype": "Date",
+   "label": "Clearing Date"
+  },
+  {
+   "fieldname": "column_break_idrn",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "section_break_wvvj",
+   "fieldtype": "Section Break"
   }
  ],
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2024-10-10 12:03:50.022444",
+ "modified": "2025-04-11 15:48:35.284297",
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "Unreconcile Payment",
