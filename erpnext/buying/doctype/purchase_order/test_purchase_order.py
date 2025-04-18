@@ -46,7 +46,7 @@ from erpnext.accounts.doctype.payment_entry.test_payment_entry import make_test_
 from io import BytesIO
 from erpnext.accounts.doctype.shipping_rule.test_shipping_rule import create_shipping_rule
 from erpnext.accounts.doctype.sales_invoice.test_sales_invoice import create_company_and_supplier as create_data
-
+from .purchase_order import close_or_unclose_purchase_orders
 
 class TestPurchaseOrder(FrappeTestCase):
 	def test_purchase_order_qty(self):
@@ -3421,7 +3421,6 @@ class TestPurchaseOrder(FrappeTestCase):
 		self.assertEqual(po.items[0].rate, 130)
 
 	def test_close_or_unclose_purchase_orders_with_close_status(self):
-		from .purchase_order import close_or_unclose_purchase_orders
 
 		po_1 = create_purchase_order()
 		po_2 = create_purchase_order()
