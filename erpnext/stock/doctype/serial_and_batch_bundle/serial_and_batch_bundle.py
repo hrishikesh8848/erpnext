@@ -142,6 +142,10 @@ class SerialandBatchBundle(Document):
 					)
 				)
 		elif not frappe.db.exists("Stock Ledger Entry", {"voucher_detail_no": self.voucher_detail_no}):
+			if self.voucher_type == "Delivery Note" and frappe.db.exists(
+				"Packed Item", self.voucher_detail_no
+			):
+				return
 			frappe.throw(
 				_("The serial and batch bundle {0} not linked to {1} {2}").format(
 					bold(self.name), self.voucher_type, bold(self.voucher_no)
@@ -2095,7 +2099,8 @@ def get_auto_batch_nos(kwargs):
 		filter_zero_near_batches(available_batches, kwargs)
 
 	if not kwargs.consider_negative_batches:
-		available_batches = list(filter(lambda x: x.qty > 0, available_batches))
+		precision = frappe.get_precision("Stock Ledger Entry", "actual_qty")
+		available_batches = [d for d in available_batches if flt(d.qty, precision) > 0]
 
 	if not qty:
 		return available_batches

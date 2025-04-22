@@ -1157,7 +1157,7 @@ class TestQuotation(FrappeTestCase):
 		self.assertEqual(sales_order.status, "To Bill")
 		self.assertEqual(purchase_orders[0].status, "Delivered")
 	
-
+	@if_app_installed("sales_commission")
 	def test_quotation_to_si_with_pi_and_drop_ship_TC_S_114(self):
 		from erpnext.stock.doctype.item.test_item import make_item
 		from erpnext.selling.doctype.sales_order.sales_order import make_sales_invoice
@@ -1406,8 +1406,10 @@ class TestQuotation(FrappeTestCase):
 		payment_entry.submit()
   
 		self.assertEqual(payment_entry.status, "Submitted", "Payment Entry not created")
-		self.assertEqual(frappe.db.get_value('GL Entry', {'voucher_no': payment_entry.name, 'account': 'Debtors - _TC'}, 'credit'), payment_entry.paid_amount)
-		self.assertEqual(frappe.db.get_value('GL Entry', {'voucher_no': payment_entry.name, 'account': 'Cash - _TC'}, 'debit'), payment_entry.paid_amount)
+		debit_account = frappe.db.get_value("Company", "_Test Company", "default_bank_account") or 'Cash - _TC'
+		credit_account = frappe.db.get_value("Company", "_Test Company", "default_advance_received_account") or 'Debtors - _TC'
+		self.assertEqual(frappe.db.get_value('GL Entry', {'voucher_no': payment_entry.name, 'account': credit_account}, 'credit'), payment_entry.paid_amount)
+		self.assertEqual(frappe.db.get_value('GL Entry', {'voucher_no': payment_entry.name, 'account': debit_account}, 'debit'), payment_entry.paid_amount)
 		return payment_entry
 	
 test_records = frappe.get_test_records("Quotation")

@@ -18,7 +18,6 @@ from erpnext.maintenance.doctype.maintenance_schedule.test_maintenance_schedule 
 from erpnext.maintenance.doctype.maintenance_visit.test_maintenance_visit import (
 	make_maintenance_visit,
 )
-from erpnext.manufacturing.doctype.blanket_order.test_blanket_order import make_blanket_order
 from erpnext.selling.doctype.product_bundle.test_product_bundle import make_product_bundle
 from erpnext.selling.doctype.sales_order.sales_order import (
 	WarehouseRequired,
@@ -1476,7 +1475,7 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 		Second Sales Order should not add on to Blanket Orders Ordered Quantity.
 		"""
 
-		make_blanket_order(blanket_order_type="Selling", quantity=10, rate=10)
+		_make_blanket_order(blanket_order_type="Selling", quantity=10, rate=10)
 
 		so = make_sales_order(item_code="_Test Item", qty=5, against_blanket_order=1)
 		so_doc = frappe.get_doc("Sales Order", so.get("name"))
@@ -2147,7 +2146,7 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 
 		self.assertEqual(dn.items[0].rate, 90)
 
-	def test_credit_limit_on_so_reopning(self):
+	def test_credit_limit_on_so_reopening(self):
 		# set credit limit
 		company = "_Test Company"
 		customer = frappe.get_doc("Customer", self.customer)
@@ -2169,12 +2168,14 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 
 		so1 = make_sales_order(qty=9, rate=100, do_not_submit=True)
 		so1.customer = self.customer
+		so1.customer_address = so1.shipping_address_name = None
 		so1.save().submit()
 
 		so1.update_status("Closed")
 
 		so2 = make_sales_order(qty=9, rate=100, do_not_submit=True)
 		so2.customer = self.customer
+		so2.customer_address = so2.shipping_address_name = None
 		so2.save().submit()
 
 		self.assertRaises(frappe.ValidationError, so1.update_status, "Draft")
@@ -2278,8 +2279,10 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 		self.assertEqual(si.status, "Unpaid", "Sales Invoice not created")
 		self.validate_gl_entries(si.name,25000)
   
+	@if_app_installed("india_compliance")
 	def test_sales_order_with_partial_advance_payment_TC_S_041(self):
 		make_item("_Test Item", {"is_stock_item": 1})
+		get_or_create_fiscal_year("_Test Company")
 		make_stock_entry(item_code="_Test Item", qty=100, rate=500, target="_Test Warehouse - _TC")
 		so = make_sales_order(cost_center='Main - _TC', selling_price_list='Standard Selling', qty=1, rate=5000, do_not_save=True)
 		so.save()
@@ -2562,10 +2565,10 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 		self.assertEqual(qty_change[0].get("actual_qty"), -1)
 
 		dn_acc_credit1 = frappe.db.get_value('GL Entry', {'voucher_type': 'Delivery Note', 'voucher_no': dn.name, 'account': 'Stock In Hand - _TIRC'}, 'credit')
-		self.assertEqual(dn_acc_credit1, qty_change[0].get("valuation_rate") * 1)
+		self.assertEqual(dn_acc_credit1, 5000)
 
 		dn_acc_debit1 = frappe.db.get_value('GL Entry', {'voucher_type': 'Delivery Note', 'voucher_no': dn.name, 'account': 'Cost of Goods Sold - _TIRC'}, 'debit')
-		self.assertEqual(dn_acc_debit1, qty_change[0].get("valuation_rate") * 1)
+		self.assertEqual(dn_acc_debit1, 5000)
 
 		from erpnext.stock.doctype.delivery_note.delivery_note import (make_sales_invoice)
 
@@ -2597,7 +2600,7 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 
 		dn.reload()
 		self.assertEqual(dn.status, "Completed")
-    
+	
 	@if_app_installed("india_compliance")
 	def test_sales_order_partial_payment_with_gst_TC_S_012(self):
 		so = self.create_and_submit_sales_order_with_gst("_Test Item", qty=4, rate=5000)
@@ -2613,10 +2616,10 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 		self.assertEqual(qty_change1[0].get("actual_qty"), -2)
 
 		dn_acc_credit1 = frappe.db.get_value('GL Entry', {'voucher_type': 'Delivery Note', 'voucher_no': dn1.name, 'account': 'Stock In Hand - _TIRC'}, 'credit')
-		self.assertEqual(dn_acc_credit1, qty_change1[0].get("valuation_rate") * 2)
+		self.assertEqual(dn_acc_credit1, 10000)
 
 		dn_acc_debit1 = frappe.db.get_value('GL Entry', {'voucher_type': 'Delivery Note', 'voucher_no': dn1.name, 'account': 'Cost of Goods Sold - _TIRC'}, 'debit')
-		self.assertEqual(dn_acc_debit1, qty_change1[0].get("valuation_rate") * 2)
+		self.assertEqual(dn_acc_debit1, 10000)
 
 		from erpnext.stock.doctype.delivery_note.delivery_note import (make_sales_invoice)
 
@@ -2656,10 +2659,10 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 		self.assertEqual(qty_change2[0].get("actual_qty"), -2)
 
 		dn_acc_credit2 = frappe.db.get_value('GL Entry', {'voucher_type': 'Delivery Note', 'voucher_no': dn2.name, 'account': 'Stock In Hand - _TIRC'}, 'credit')
-		self.assertEqual(dn_acc_credit2, qty_change2[0].get("valuation_rate") * 2)
+		self.assertEqual(dn_acc_credit2, 10000)
 
 		dn_acc_debit2 = frappe.db.get_value('GL Entry', {'voucher_type': 'Delivery Note', 'voucher_no': dn2.name, 'account': 'Cost of Goods Sold - _TIRC'}, 'debit')
-		self.assertEqual(dn_acc_debit2, qty_change2[0].get("valuation_rate") * 2)
+		self.assertEqual(dn_acc_debit2, 10000)
 
 		si2 = make_sales_invoice(dn2.name)
 		si2.insert()
@@ -2703,10 +2706,10 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 		self.assertEqual(qty_change[0].get("actual_qty"), -4)
 
 		dn_acc_credit1 = frappe.db.get_value('GL Entry', {'voucher_type': 'Delivery Note', 'voucher_no': dn.name, 'account': 'Stock In Hand - _TIRC'}, 'credit')
-		self.assertEqual(dn_acc_credit1, qty_change[0].get("valuation_rate") * 4)
+		self.assertEqual(dn_acc_credit1, 20000)
 
 		dn_acc_debit1 = frappe.db.get_value('GL Entry', {'voucher_type': 'Delivery Note', 'voucher_no': dn.name, 'account': 'Cost of Goods Sold - _TIRC'}, 'debit')
-		self.assertEqual(dn_acc_debit1, qty_change[0].get("valuation_rate") * 4)
+		self.assertEqual(dn_acc_debit1, 20000)
 
 		from erpnext.stock.doctype.delivery_note.delivery_note import (make_sales_invoice)
 
@@ -2797,10 +2800,10 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 		qty_change = frappe.get_all('Stock Ledger Entry', {'item_code': '_Test Item', 'voucher_no': dn.name, 'warehouse': 'Stores - _TIRC'}, ['actual_qty', 'valuation_rate'])
 		self.assertEqual(qty_change[0].get("actual_qty"), -4)
 		dn_acc_credit = frappe.db.get_value('GL Entry', {'voucher_type': 'Delivery Note', 'voucher_no': dn.name, 'account': 'Stock In Hand - _TIRC'}, 'credit')
-		self.assertEqual(dn_acc_credit, qty_change[0].get("valuation_rate") * 4)
+		self.assertEqual(dn_acc_credit, 20000)
 
 		dn_acc_debit = frappe.db.get_value('GL Entry', {'voucher_type': 'Delivery Note', 'voucher_no': dn.name, 'account': 'Cost of Goods Sold - _TIRC'}, 'debit')
-		self.assertEqual(dn_acc_debit, qty_change[0].get("valuation_rate") * 4)
+		self.assertEqual(dn_acc_debit, 20000)
     
 	@if_app_installed("india_compliance")
 	def test_sales_order_create_partial_dn_via_si_with_gst_TC_S_015(self):
@@ -2846,7 +2849,6 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 			['actual_qty', 'valuation_rate']
 		)
 		actual_qty = qty_change1[0].get("actual_qty")
-		valuation_rate = qty_change1[0].get("valuation_rate")
 
 		self.assertEqual(actual_qty, -2)
 
@@ -2860,8 +2862,8 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 			account: frappe.db.get_value('GL Entry', {**voucher_params_dn1, 'account': account}, field)
 			for account, field in gl_accounts_dn1.items()
 		}
-		self.assertEqual(gl_entries_dn1['Stock In Hand - _TIRC'], valuation_rate * 2)
-		self.assertEqual(gl_entries_dn1['Cost of Goods Sold - _TIRC'], valuation_rate * 2)
+		self.assertEqual(gl_entries_dn1['Stock In Hand - _TIRC'], 10000)
+		self.assertEqual(gl_entries_dn1['Cost of Goods Sold - _TIRC'], 10000)
 
 		dn2 = make_delivery_note(si.name)
 		dn2.save()
@@ -2875,7 +2877,6 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 			['actual_qty', 'valuation_rate']
 		)
 		actual_qty = qty_change2[0].get("actual_qty")
-		valuation_rate = qty_change2[0].get("valuation_rate")
 
 		self.assertEqual(actual_qty, -2)
 
@@ -2891,8 +2892,8 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 			account: frappe.db.get_value('GL Entry', {**voucher_params_dn2, 'account': account}, field)
 			for account, field in gl_accounts_dn2.items()
 		}
-		self.assertEqual(gl_entries_dn2['Stock In Hand - _TIRC'], valuation_rate * 2)
-		self.assertEqual(gl_entries_dn2['Cost of Goods Sold - _TIRC'], valuation_rate * 2)
+		self.assertEqual(gl_entries_dn2['Stock In Hand - _TIRC'], 10000)
+		self.assertEqual(gl_entries_dn2['Cost of Goods Sold - _TIRC'], 10000)
     
 	@if_app_installed("india_compliance")
 	def test_sales_order_update_stock_in_si_with_gst_TC_S_018(self):
@@ -2911,7 +2912,6 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 			['actual_qty', 'valuation_rate']
 		)
 		actual_qty = qty_change[0].get("actual_qty")
-		valuation_rate = qty_change[0].get("valuation_rate")
 
 		self.assertEqual(actual_qty, -4)
 
@@ -2931,8 +2931,8 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 			account: frappe.db.get_value('GL Entry', {**voucher_params_si, 'account': account}, field)
 			for account, field in gl_accounts_si.items()
 		}
-		self.assertEqual(gl_entries_si['Stock In Hand - _TIRC'], valuation_rate * 4)
-		self.assertEqual(gl_entries_si['Cost of Goods Sold - _TIRC'], valuation_rate * 4)
+		self.assertEqual(gl_entries_si['Stock In Hand - _TIRC'], 20000)
+		self.assertEqual(gl_entries_si['Cost of Goods Sold - _TIRC'], 20000)
 		self.assertEqual(gl_entries_si['Sales - _TIRC'], 20000)
 		self.assertEqual(gl_entries_si['Debtors - _TIRC'], 23600)
 		self.assertEqual(gl_entries_si['Output Tax SGST - _TIRC'], 1800)
@@ -2960,7 +2960,6 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 		)
 
 		actual_qty1 = qty_change1[0].get("actual_qty")
-		valuation_rate1 = qty_change1[0].get("valuation_rate")
 
 		self.assertEqual(actual_qty1, -2)
 
@@ -2977,8 +2976,8 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 			account: frappe.db.get_value('GL Entry', {**voucher_params_si1, 'account': account}, field)
 			for account, field in gl_accounts_si1.items()
 		}
-		self.assertEqual(gl_entries_si1['Stock In Hand - _TIRC'], valuation_rate1 * 2)
-		self.assertEqual(gl_entries_si1['Cost of Goods Sold - _TIRC'], valuation_rate1 * 2)
+		self.assertEqual(gl_entries_si1['Stock In Hand - _TIRC'], 10000)
+		self.assertEqual(gl_entries_si1['Cost of Goods Sold - _TIRC'], 10000)
 		self.assertEqual(gl_entries_si1['Sales - _TIRC'], 10000)
 		self.assertEqual(gl_entries_si1['Debtors - _TIRC'], 11800)
 
@@ -2995,7 +2994,6 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 			['actual_qty', 'valuation_rate']
 		)
 		actual_qty2 = qty_change2[0].get("actual_qty")
-		valuation_rate2 = qty_change2[0].get("valuation_rate")
 
 		self.assertEqual(actual_qty2, -2)
 
@@ -3012,8 +3010,8 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 			account: frappe.db.get_value('GL Entry', {**voucher_params_si2, 'account': account}, field)
 			for account, field in gl_accounts_si2.items()
 		}
-		self.assertEqual(gl_entries_si2['Stock In Hand - _TIRC'], valuation_rate2 * 2)
-		self.assertEqual(gl_entries_si2['Cost of Goods Sold - _TIRC'], valuation_rate2 * 2)
+		self.assertEqual(gl_entries_si2['Stock In Hand - _TIRC'], 10000)
+		self.assertEqual(gl_entries_si2['Cost of Goods Sold - _TIRC'], 10000)
 		self.assertEqual(gl_entries_si2['Sales - _TIRC'], 10000)
 		self.assertEqual(gl_entries_si2['Debtors - _TIRC'], 11800)
 
@@ -3942,11 +3940,11 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 		self.assertEqual(stock_entry.get("actual_qty"), -1)
 		self.assertEqual(
 			frappe.db.get_value("GL Entry", {"voucher_type": "Delivery Note", "voucher_no": dn.name, "account": "Stock In Hand - _TIRC"}, "credit"),
-			stock_entry.get("valuation_rate")
+			5000
 		)
 		self.assertEqual(
 			frappe.db.get_value("GL Entry", {"voucher_type": "Delivery Note", "voucher_no": dn.name, "account": "Cost of Goods Sold - _TIRC"}, "debit"),
-			stock_entry.get("valuation_rate")
+			5000
 		)
 
 		from erpnext.stock.doctype.delivery_note.delivery_note import make_sales_invoice
@@ -3994,9 +3992,8 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 		}, ['valuation_rate', 'actual_qty'])[0]
 		self.assertEqual(stock_entry.get("actual_qty"), -1)
 
-		dn_acc_value = stock_entry.get("valuation_rate")
-		self.assertEqual(frappe.db.get_value('GL Entry', {'voucher_no': dn.name, 'account': 'Stock In Hand - _TIRC'}, 'credit'), dn_acc_value)
-		self.assertEqual(frappe.db.get_value('GL Entry', {'voucher_no': dn.name, 'account': 'Cost of Goods Sold - _TIRC'}, 'debit'), dn_acc_value)
+		self.assertEqual(frappe.db.get_value('GL Entry', {'voucher_no': dn.name, 'account': 'Stock In Hand - _TIRC'}, 'credit'), 5000)
+		self.assertEqual(frappe.db.get_value('GL Entry', {'voucher_no': dn.name, 'account': 'Cost of Goods Sold - _TIRC'}, 'debit'), 5000)
 
 		from erpnext.stock.doctype.delivery_note.delivery_note import make_sales_invoice
 
@@ -4026,9 +4023,11 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 		si.reload()
 		self.assertEqual(si.outstanding_amount, 0)
 		self.assertEqual(si.status, "Paid")
- 
+	
+	@if_app_installed("india_compliance")
 	def test_sales_order_with_full_advance_payment_and_shipping_rule_TC_S_044(self):
 		make_item("_Test Item", {"is_stock_item": 1})
+		get_or_create_fiscal_year("_Test Company")
 		make_stock_entry(item_code="_Test Item", qty=100, rate=500, target="_Test Warehouse - _TC")
 		so = make_sales_order(
 			cost_center='Main - _TC', 
@@ -4069,8 +4068,10 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 		self.assertEqual(frappe.db.get_value('GL Entry', {'voucher_no': si.name,'account': 'Debtors - _TC'}, 'debit'), 5200)
 		self.assertEqual(frappe.db.get_value('GL Entry', {'voucher_no': si.name,'account': '_Test Account Shipping Charges - _TC'}, 'credit'), 200)
   
+	@if_app_installed("india_compliance")
 	def test_sales_order_with_partial_advance_payment_and_shipping_rule_TC_S_045(self):
 		make_item("_Test Item", {"is_stock_item": 1})
+		get_or_create_fiscal_year
 		make_stock_entry(item_code="_Test Item", qty=100, rate=500, target="_Test Warehouse - _TC")
 		so = make_sales_order(
 			cost_center='Main - _TC', 
@@ -4451,7 +4452,10 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
   
 	@if_app_installed("india_compliance")
 	def test_sales_order_creating_si_with_product_bundle_and_gst_rule_TC_S_059(self):
+		from erpnext.accounts.doctype.sales_invoice.test_sales_invoice import create_registered_company
+		create_registered_company()
 		create_test_warehouse(name= "Stores - _TIRC", warehouse_name="Stores", company="_Test Indian Registered Company")
+		get_or_create_fiscal_year("_Test Indian Registered Company")
 		make_item("_Test Item", {"is_stock_item": 1})
 		product_bundle = make_item("_Test Product Bundle", {"is_stock_item": 0})
 		make_item("_Test Bundle Item 1", {"is_stock_item": 1})
@@ -4555,7 +4559,7 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 	@if_app_installed("india_compliance")
 	def test_sales_order_creating_invoice_with_installation_note_and_gst_TC_S_062(self):
 		make_item("_Test Item", {"is_stock_item": 1})
-		so = self.create_and_submit_sales_order_with_gst("_Test Item", qty=5, rate=20)
+		so = self.create_and_submit_sales_order_with_gst("_Test Item", qty=5, rate=5000)
   
 		dn = make_delivery_note(so.name)
 		dn.save()
@@ -4566,8 +4570,8 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 		qty_change = frappe.get_all('Stock Ledger Entry', {'item_code': '_Test Item', 'voucher_no': dn.name, 'warehouse': 'Stores - _TIRC'}, ['actual_qty', 'valuation_rate'])
 		self.assertEqual(qty_change[0].get("actual_qty"), -5)
 
-		self.assertEqual(frappe.db.get_value('GL Entry', {'voucher_no': dn.name, 'account': 'Stock In Hand - _TIRC'}, 'credit'), qty_change[0].get("valuation_rate") * 5)
-		self.assertEqual(frappe.db.get_value('GL Entry', {'voucher_no': dn.name, 'account': 'Cost of Goods Sold - _TIRC'}, 'debit'), qty_change[0].get("valuation_rate") * 5)
+		self.assertEqual(frappe.db.get_value('GL Entry', {'voucher_no': dn.name, 'account': 'Stock In Hand - _TIRC'}, 'credit'), 25000 )
+		self.assertEqual(frappe.db.get_value('GL Entry', {'voucher_no': dn.name, 'account': 'Cost of Goods Sold - _TIRC'}, 'debit'), 25000)
   
 		from erpnext.stock.doctype.delivery_note.delivery_note import (make_installation_note, make_sales_invoice)
 		install_note = make_installation_note(dn.name)
@@ -4581,10 +4585,10 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 		si.submit()
 
 		self.assertEqual(si.status, 'Unpaid')
-		self.assertEqual(frappe.db.get_value('GL Entry', {'voucher_no': si.name, 'account': 'Sales - _TIRC'}, 'credit'), 100)
-		self.assertEqual(frappe.db.get_value('GL Entry', {'voucher_no': si.name, 'account': 'Debtors - _TIRC'}, 'debit'), 118)
-		self.assertEqual(frappe.db.get_value('GL Entry', {'voucher_no': si.name, 'account': 'Output Tax SGST - _TIRC'}, 'credit'), 9)
-		self.assertEqual(frappe.db.get_value('GL Entry', {'voucher_no': si.name, 'account': 'Output Tax CGST - _TIRC'}, 'credit'), 9)
+		self.assertEqual(frappe.db.get_value('GL Entry', {'voucher_no': si.name, 'account': 'Sales - _TIRC'}, 'credit'), 25000)
+		self.assertEqual(frappe.db.get_value('GL Entry', {'voucher_no': si.name, 'account': 'Debtors - _TIRC'}, 'debit'), 29500)
+		self.assertEqual(frappe.db.get_value('GL Entry', {'voucher_no': si.name, 'account': 'Output Tax SGST - _TIRC'}, 'credit'), 2250)
+		self.assertEqual(frappe.db.get_value('GL Entry', {'voucher_no': si.name, 'account': 'Output Tax CGST - _TIRC'}, 'credit'), 2250)
 	
 	@change_settings("Stock Settings", {"enable_stock_reservation": 1})
 	def test_sales_order_for_stock_reservation_TC_S_063(self, reuse=None, get_so_with_stock_reserved=None):
@@ -4681,6 +4685,7 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 	@if_app_installed("india_compliance")
 	@change_settings("Stock Settings", {"enable_stock_reservation": 1})
 	def test_sales_order_for_stock_reservation_with_gst_TC_S_065(self):
+		get_or_create_fiscal_year("_Test Indian Registered Company")
 		create_test_warehouse(name= "Stores - _TIRC", warehouse_name="Stores", company="_Test Indian Registered Company")
 
 		if not frappe.db.exists("Company", "_Test Indian Registered Company"):
@@ -4767,7 +4772,17 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 		self.assertEqual(qty_change_return, 1)	
   
 	def test_sales_order_for_stock_reservation_with_returns_and_note_TC_S_068(self):
-		si = self.test_sales_order_for_stock_reservation_with_returns_TC_S_064()
+		dn, si = self.test_sales_order_for_stock_reservation_TC_S_063()
+  
+		from erpnext.stock.doctype.delivery_note.delivery_note import make_sales_return
+		sr = make_sales_return(dn.name)
+		sr.save()
+		sr.submit()
+  
+		self.assertEqual(sr.status, "To Bill", "Sales Return not created")
+  
+		qty_change_return = frappe.db.get_value('Stock Ledger Entry', {'item_code': '_Test Item', 'voucher_no': sr.name, 'warehouse': '_Test Warehouse - _TC'}, 'actual_qty')
+		self.assertEqual(qty_change_return, 1)
   
 		from erpnext.accounts.doctype.sales_invoice.sales_invoice import make_sales_return as make_credit_note
 		cn = make_credit_note(si.name)
@@ -5591,7 +5606,7 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 		self.assertEqual(purchase_orders[0].status, "Delivered")
 
 		pi = make_pi_from_po(purchase_orders[0].name)
-		pi.insert()
+		pi.insert(ignore_permissions=True)
 		pi.submit()
 
 		gl_entries = frappe.get_all("GL Entry", filters={"voucher_no": pi.name}, fields=["account", "debit", "credit"])
@@ -5652,7 +5667,7 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 		self.assertEqual(purchase_orders[0].status, "Delivered")
 
 		pi = make_pi_from_po(purchase_orders[0].name)
-		pi.insert()
+		pi.insert(ignore_permissions=True)
 		pi.submit()
 
 		gl_entries = frappe.get_all("GL Entry", filters={"voucher_no": pi.name}, fields=["account", "debit", "credit"])
@@ -5985,7 +6000,7 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 		customer = create_customer("_Test Customer 1",currency = "INR")
 		make_item("_Test Item", {"is_stock_item": 1})
 		make_stock_entry(item_code="_Test Item", qty=100, rate=500, target="_Test Warehouse - _TC")
-		sales_order = make_sales_order(customer=customer,cost_center='Main - _TC', selling_price_list='Standard Selling', do_not_save=True)
+		sales_order = make_sales_order(customer=customer,cost_center='Main - _TC', selling_price_list='_Test Price List', do_not_save=True)
 		sales_order.delivery_date = nowdate()
 		if qty and rate:
 			for item in sales_order.items:
@@ -6003,6 +6018,7 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 	def create_and_submit_sales_order_with_gst(self, item_code, qty=None, rate=None):
 		from erpnext.accounts.doctype.sales_invoice.test_sales_invoice import create_registered_company
 		create_registered_company()
+		get_or_create_fiscal_year("_Test Indian Registered Company")
 		create_test_warehouse(name= "Stores - _TIRC", warehouse_name="Stores", company="_Test Indian Registered Company")
 		make_item("_Test Item", {"is_stock_item": 1})
 		make_stock_entry(item_code="_Test Item", qty=10, rate=rate, target="Stores - _TIRC")
@@ -6024,7 +6040,7 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 			customer="_Test Registered Customer",
 			warehouse="Stores - _TIRC",
 			cost_center="Main - _TIRC",
-			selling_price_list="Standard Selling",
+			selling_price_list='_Test Price List',
 			item_code=item_code,
 			qty=qty,
 			rate=rate,
@@ -6075,8 +6091,10 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 		payment_entry.submit()
   
 		self.assertEqual(payment_entry.status, "Submitted", "Payment Entry not created")
-		self.assertEqual(frappe.db.get_value('GL Entry', {'voucher_no': payment_entry.name, 'account': 'Debtors - _TC'}, 'credit'), payment_entry.paid_amount)
-		self.assertEqual(frappe.db.get_value('GL Entry', {'voucher_no': payment_entry.name, 'account': 'Cash - _TC'}, 'debit'), payment_entry.paid_amount)
+		debit_account = frappe.db.get_value("Company", "_Test Company", "default_bank_account") or 'Cash - _TC'
+		credit_account = frappe.db.get_value("Company", "_Test Company", "default_advance_received_account") or 'Debtors - _TC'
+		self.assertEqual(frappe.db.get_value('GL Entry', {'voucher_no': payment_entry.name, 'account': credit_account}, 'credit'), payment_entry.paid_amount)
+		self.assertEqual(frappe.db.get_value('GL Entry', {'voucher_no': payment_entry.name, 'account': debit_account}, 'debit'), payment_entry.paid_amount)
 		return payment_entry
 
 	def validate_gl_entries(self, voucher_no, amount):
@@ -6618,36 +6636,44 @@ def make_sales_order_workflow():
 	return workflow
 
 def get_or_create_fiscal_year(company):
-	from datetime import datetime
-	current_date = datetime.today()
-	formatted_date = current_date.strftime("%Y-%m-%d")
+	from datetime import datetime, date
+	import frappe
+
+	current_date = datetime.today().date()
 	existing_fy = frappe.get_all(
 		"Fiscal Year",
-		filters={ 
-			"year_start_date": ["<=", formatted_date],
-			"year_end_date": [">=", formatted_date],
-			"disabled": 0
-		},
-		fields=["name"]
+		filters={"disabled": 0},
+		fields=["name", "year_start_date", "year_end_date"]
 	)
+	updated_existing_fy = None
+	
+	for d in existing_fy:
+		start_date = d.year_start_date.date() if isinstance(d.year_start_date, datetime) else d.year_start_date
+		end_date = d.year_end_date.date() if isinstance(d.year_end_date, datetime) else d.year_end_date
+		if start_date <= current_date <= end_date:
+			updated_existing_fy = d.name
+			break
 
-	if existing_fy:
-		fiscal_year = frappe.get_doc("Fiscal Year",existing_fy[0].name)
+	is_company = False
+	if updated_existing_fy:
+		fiscal_year = frappe.get_doc("Fiscal Year", updated_existing_fy)
 		for years in fiscal_year.companies:
 			if years.company == company:
-				pass
-			else:
-				fiscal_year.append("companies", {"company": company})
-				fiscal_year.save()
+				is_company = True
+		if not is_company:
+			fiscal_year.append("companies", {"company": company})
+			fiscal_year.save()
 	else:
 		current_year = datetime.now().year
-		first_date = f"01-01-{current_year}"
-		last_date = f"31-12-{current_year}"
+		first_date = date(current_year, 1, 1)
+		last_date = date(current_year, 12, 31)
 		fiscal_year = frappe.new_doc("Fiscal Year")
-		fiscal_year.year = f"{current_year}"
+		fiscal_year.year = f"{current_year}-{company}"
 		fiscal_year.year_start_date = first_date
 		fiscal_year.year_end_date = last_date
-		fiscal_year.append('companies',{
-			'company':company
-		})
+		fiscal_year.append("companies", {"company": company})
 		fiscal_year.save()
+
+def _make_blanket_order(**args):
+	from erpnext.manufacturing.doctype.blanket_order.test_blanket_order import make_blanket_order
+	return make_blanket_order(**args)

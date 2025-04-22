@@ -20,12 +20,19 @@ from erpnext.stock.doctype.serial_and_batch_bundle.test_serial_and_batch_bundle 
 from erpnext.stock.doctype.stock_entry.stock_entry_utils import make_stock_entry
 from erpnext.accounts.doctype.pos_closing_entry.pos_closing_entry import make_closing_entry_from_opening
 from erpnext.accounts.doctype.pos_opening_entry.test_pos_opening_entry import create_opening_entry
+from frappe.tests.utils import if_app_installed
 
 class TestPOSInvoice(unittest.TestCase):
 	@classmethod
 	def setUpClass(cls):
 		make_stock_entry(target="_Test Warehouse - _TC", item_code="_Test Item", qty=800, basic_rate=100)
 		frappe.db.sql("delete from `tabTax Rule`")
+
+		from erpnext.accounts.doctype.pos_closing_entry.test_pos_closing_entry import init_user_and_profile
+		from erpnext.accounts.doctype.pos_opening_entry.test_pos_opening_entry import create_opening_entry
+
+		cls.test_user, cls.pos_profile = init_user_and_profile()
+		create_opening_entry(cls.pos_profile, cls.test_user)
 
 	def tearDown(self):
 		if frappe.session.user != "Administrator":
@@ -975,7 +982,8 @@ class TestPOSInvoice(unittest.TestCase):
 		finally:
 			frappe.db.rollback(save_point="before_test_delivered_serial_no_case")
 			frappe.set_user("Administrator")
-		
+	
+	@if_app_installed("india_compliance")
 	def test_pos_opening_to_pos_closing_with_possi_and_tax_TC_S_102(self):
 		from erpnext.accounts.doctype.pos_closing_entry.test_pos_closing_entry import init_user_and_profile	
 
@@ -1020,13 +1028,15 @@ class TestPOSInvoice(unittest.TestCase):
 		test_user, pos_profile = init_user_and_profile()
 		opening_entry = create_opening_entry(pos_profile=pos_profile, user=test_user.name)
 		self.assertEqual(opening_entry.status, "Open")
-		inv_points = create_pos_invoice(rate=10000, do_not_save=1)
-
 		frappe.db.set_value("Customer","_Test Customer",'loyalty_program','Test Single Loyalty')
+		inv_points = create_pos_invoice(rate=10000, do_not_save=1)
+		inv_points.save()
+		inv_points.paid_amount = inv_points.grand_total
+		inv_points.submit()
 		before_lp_details = get_loyalty_program_details_with_points(
 			"_Test Customer", loyalty_program="Test Single Loyalty"
 		)
-		inv = create_pos_invoice(rate=10000, do_not_save=1)
+		inv = create_pos_invoice(rate=9000, do_not_save=1)
 		inv.redeem_loyalty_points = 1
 		inv.loyalty_points = before_lp_details.loyalty_points
 		inv.loyalty_redemption_account ="Cash - _TC"
@@ -1043,7 +1053,8 @@ class TestPOSInvoice(unittest.TestCase):
 		opening_entry.reload()
 		self.assertEqual(inv.status, "Paid")
 		self.assertEqual(opening_entry.status, "Closed")
-	
+
+	@if_app_installed("india_compliance")
 	def test_pos_inoivce_with_discount_grand_total_TC_S_104(self):
 		from erpnext.accounts.doctype.pos_closing_entry.test_pos_closing_entry import init_user_and_profile	
 
@@ -1068,6 +1079,7 @@ class TestPOSInvoice(unittest.TestCase):
 		self.assertEqual(inv.status, "Paid")
 		self.assertEqual(opening_entry.status, "Closed")
 
+	@if_app_installed("india_compliance")
 	def test_pos_inoivce_with_discount_net_total_TC_S_105(self):
 		from erpnext.accounts.doctype.pos_closing_entry.test_pos_closing_entry import init_user_and_profile	
 
@@ -1092,6 +1104,7 @@ class TestPOSInvoice(unittest.TestCase):
 		self.assertEqual(inv.status, "Paid")
 		self.assertEqual(opening_entry.status, "Closed")
 	
+	@if_app_installed("india_compliance")
 	def test_pos_inoivce_with_subscription_TC_S_106(self):
 		from erpnext.accounts.doctype.pos_closing_entry.test_pos_closing_entry import init_user_and_profile	
 
@@ -1116,7 +1129,7 @@ class TestPOSInvoice(unittest.TestCase):
 		self.assertEqual(inv.status, "Paid")
 		self.assertEqual(opening_entry.status, "Closed")
 
-	
+	@if_app_installed("india_compliance")
 	def test_pos_inoivce_with_terms_and_conditions_TC_S_107(self):
 		from erpnext.accounts.doctype.pos_closing_entry.test_pos_closing_entry import init_user_and_profile	
 
@@ -1139,6 +1152,7 @@ class TestPOSInvoice(unittest.TestCase):
 		self.assertEqual(inv.status, "Paid")
 		self.assertEqual(opening_entry.status, "Closed")
 	
+	@if_app_installed("india_compliance")
 	def test_pos_invoice_with_manually_redeem_loyalty_points_TC_S_117(self):
 		from erpnext.accounts.doctype.loyalty_program.loyalty_program import get_loyalty_program_details_with_points
 		if not frappe.db.exists("Loyalty Program", "Test Single Loyalty"):
@@ -1156,9 +1170,11 @@ class TestPOSInvoice(unittest.TestCase):
 					"collection_rules": [{"tier_name": "Silver", "collection_factor": 1000, "min_spent": 1000}],
 				}
 			).insert()
-		inv_points = create_pos_invoice(rate=10000, do_not_save=1)
-
 		frappe.db.set_value("Customer","_Test Customer",'loyalty_program','Test Single Loyalty')
+		inv_points = create_pos_invoice(rate=10000, do_not_save=1)
+		inv_points.save()
+		inv_points.paid_amount = inv_points.grand_total
+		inv_points.submit()
 		before_lp_details = get_loyalty_program_details_with_points(
 			"_Test Customer", loyalty_program="Test Single Loyalty"
 		)
@@ -1169,17 +1185,16 @@ class TestPOSInvoice(unittest.TestCase):
 		inv.loyalty_amount = inv.loyalty_points * before_lp_details.conversion_factor
 		inv.tax_category = "In-State"
 		inv.taxes_and_charges = "Output GST In-state - _TC"
-
+		inv.save()
 		inv.append(
 			"payments",
-			{"mode_of_payment": "Cash", "account": "Cash - _TC", "amount": 10000 - inv.loyalty_amount},
+			{"mode_of_payment": "Cash", "account": "Cash - _TC", "amount": inv.grand_total - inv.loyalty_amount},
 		)
-		inv.save()
-		inv.paid_amount = 10000 - inv.loyalty_amount
+		inv.paid_amount = inv.grand_total
 		inv.submit()
 		self.assertEqual(inv.status, "Paid")
 		
-	
+	@if_app_installed("india_compliance")
 	def test_pos_inoivce_with_discount_TC_S_118(self):
 		inv = create_pos_invoice(rate=3000, do_not_save=1)
 		inv.taxes_and_charges = "Output GST In-state - _TC"
@@ -1206,6 +1221,7 @@ class TestPOSInvoice(unittest.TestCase):
 		pos_return.submit()
 		self.assertEqual(pos_return.status, "Return")
 	
+	@if_app_installed("india_compliance")
 	def test_pos_inoivce_retun_with_taxes_and_charges_TC_S_120(self):
 		inv = create_pos_invoice(rate=3000,do_not_save=1)
 		inv.append("payments", {"mode_of_payment": "Cash", "account": "Cash - _TC", "amount": inv.grand_total})
