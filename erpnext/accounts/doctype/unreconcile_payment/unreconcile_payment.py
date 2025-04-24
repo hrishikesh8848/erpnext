@@ -24,14 +24,12 @@ class UnreconcilePayment(Document):
 	from typing import TYPE_CHECKING
 
 	if TYPE_CHECKING:
+		from erpnext.accounts.doctype.unreconcile_payment_entries.unreconcile_payment_entries import UnreconcilePaymentEntries
 		from frappe.types import DF
-
-		from erpnext.accounts.doctype.unreconcile_payment_entries.unreconcile_payment_entries import (
-			UnreconcilePaymentEntries,
-		)
 
 		allocations: DF.Table[UnreconcilePaymentEntries]
 		amended_from: DF.Link | None
+		clearing_date: DF.Date | None
 		company: DF.Link | None
 		voucher_no: DF.DynamicLink | None
 		voucher_type: DF.Link | None
@@ -178,6 +176,11 @@ def create_unreconcile_doc_for_selection(selections=None):
 			unrecon.company = row.get("company")
 			unrecon.voucher_type = row.get("voucher_type")
 			unrecon.voucher_no = row.get("voucher_no")
+			get_parent=frappe.db.get_value("Payment Reconciliation Allocation Records",{"invoice_type":row.get("against_voucher_type"),"invoice_number":row.get("against_voucher_no"),
+											"reference_type":row.get("voucher_type"),"reference_name":row.get("voucher_no")},"parent")
+			if get_parent:
+				unrecon.clearing_date=frappe.db.get_value("Payment Reconciliation Record",get_parent,"clearing_date")
+
 			unrecon.add_references()
 
 			# remove unselected references
