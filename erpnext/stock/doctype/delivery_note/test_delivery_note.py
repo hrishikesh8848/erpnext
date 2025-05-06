@@ -61,7 +61,11 @@ class TestDeliveryNote(FrappeTestCase):
 	def test_cancel_packing_slip_tc_sck_240(self):
 		company = "_Test Company"
 		warehouse = "_Test Warehouse 1 - _TC"
-
+		fiscal_year = frappe.get_doc("Fiscal Year", "2025")
+		# Check if company is already in child table
+		if not any(c.company == company for c in fiscal_year.companies):
+			fiscal_year.append("companies", {"company": company})
+			fiscal_year.save()
 		# Ensure customer exists
 		if not frappe.db.exists("Customer", "Test Customer"):
 			customer = frappe.get_doc({
@@ -134,256 +138,300 @@ class TestDeliveryNote(FrappeTestCase):
 		
 		
 	def test_issue_credit_note_for_except_block_tc_sck_241(self):
-			company = "_Test Company"
-			warehouse = "_Test Warehouse 1 - _TC"
-
-			# Ensure customer exists
-			if not frappe.db.exists("Customer", "Test Customer"):
-				customer = frappe.get_doc({
-					"doctype": "Customer",
-					"customer_name": "Test Customer",
-					"customer_group": "Individual",
-					"territory": "All Territories"
-				}).insert(ignore_permissions=True)
-			else:
-				customer = frappe.get_doc("Customer", "Test Customer")
-
-			# Ensure item exists
-			if not frappe.db.exists("Item", "Test Item"):
-				item = frappe.get_doc({
-					"doctype": "Item",
-					"item_code": "Test Item",
-					"item_name": "Test Item",
-					"item_group": "Products",
-					"stock_uom": "Nos",
-					"is_stock_item": 1,
-					"gst_hsn_code": "01011010"
-				}).insert(ignore_permissions=True)
-
-			# Create an original Delivery Note (non-return) to return against
-			original_dn = frappe.get_doc({
-				"doctype": "Delivery Note",
-				"customer": customer.name,
-				"company": company,
-				"posting_date": frappe.utils.nowdate(),
-				"currency":"INR" ,
-				"items": [{
-					"item_code": "Test Item",
-					"qty": 1,
-					"allow_zero_valuation_rate":1,
-					"warehouse": warehouse
-				}]
+		company = "_Test Company"
+		warehouse = "_Test Warehouse 1 - _TC"
+		fiscal_year = frappe.get_doc("Fiscal Year", "2025")
+		if not any(c.company == company for c in fiscal_year.companies):
+			fiscal_year.append("companies", {"company": company})
+			fiscal_year.save()
+		# Ensure customer exists
+		if not frappe.db.exists("Customer", "Test Customer"):
+			customer = frappe.get_doc({
+				"doctype": "Customer",
+				"customer_name": "Test Customer",
+				"customer_group": "Individual",
+				"territory": "All Territories"
 			}).insert(ignore_permissions=True)
-			original_dn.submit()
+		else:
+			customer = frappe.get_doc("Customer", "Test Customer")
 
-			# Now create a return Delivery Note against the original
-			return_dn = frappe.get_doc({
-				"doctype": "Delivery Note",
-				"customer": customer.name,
-				"company": company,
-				"is_return": 1,
-				"return_against": original_dn.name,  # required for return
-				"issue_credit_note": 0,  # triggers your target code
-				"posting_date": frappe.utils.nowdate(),
-				"currency":"INR" ,
-				"items": [{
-					"item_code": "Test Item",
-					"qty": -1,
-					"allow_zero_valuation_rate":1,
-					"warehouse": warehouse
-				}]
+		# Ensure item exists
+		if not frappe.db.exists("Item", "Test Item"):
+			item = frappe.get_doc({
+				"doctype": "Item",
+				"item_code": "Test Item",
+				"item_name": "Test Item",
+				"item_group": "Products",
+				"stock_uom": "Nos",
+				"is_stock_item": 1,
+				"gst_hsn_code": "01011010"
 			}).insert(ignore_permissions=True)
 
-			# Submit should now pass into the issue_credit_note condition
-			return_dn.submit()
+		# Create an original Delivery Note (non-return) to return against
+		original_dn = frappe.get_doc({
+			"doctype": "Delivery Note",
+			"customer": customer.name,
+			"company": company,
+			"posting_date": frappe.utils.nowdate(),
+			"currency":"INR" ,
+			"items": [{
+				"item_code": "Test Item",
+				"qty": 1,
+				"allow_zero_valuation_rate":1,
+				"warehouse": warehouse
+			}]
+		}).insert(ignore_permissions=True)
+		original_dn.submit()
+
+		# Now create a return Delivery Note against the original
+		return_dn = frappe.get_doc({
+			"doctype": "Delivery Note",
+			"customer": customer.name,
+			"company": company,
+			"is_return": 1,
+			"return_against": original_dn.name,  # required for return
+			"issue_credit_note": 0,  # triggers your target code
+			"posting_date": frappe.utils.nowdate(),
+			"currency":"INR" ,
+			"items": [{
+				"item_code": "Test Item",
+				"qty": -1,
+				"allow_zero_valuation_rate":1,
+				"warehouse": warehouse
+			}]
+		}).insert(ignore_permissions=True)
+
+		# Submit should now pass into the issue_credit_note condition
+		return_dn.submit()
+
+		# Assert return_dn is submitted
+		self.assertEqual(return_dn.docstatus, 1, "Return Delivery Note should be submitted.")
+
+		# Assert return_dn is marked as return
+		self.assertEqual(return_dn.is_return, 1, "Return Delivery Note should be marked as return.")
+
+		# Assert credit note is not issued
+		self.assertEqual(return_dn.issue_credit_note, 0, "Return Delivery Note should not issue credit note.")
 
 	def test_issue_credit_note_for_try_block_tc_sck_242(self):
-			company = "_Test Company"
-			warehouse = "_Test Warehouse 1 - _TC"
-
-			# Ensure customer exists
-			if not frappe.db.exists("Customer", "Test Customer"):
-				customer = frappe.get_doc({
-					"doctype": "Customer",
-					"customer_name": "Test Customer",
-					"customer_group": "Individual",
-					"territory": "All Territories"
-				}).insert(ignore_permissions=True)
-			else:
-				customer = frappe.get_doc("Customer", "Test Customer")
-
-			# Ensure item exists
-			if not frappe.db.exists("Item", "Test Item"):
-				item = frappe.get_doc({
-					"doctype": "Item",
-					"item_code": "Test Item",
-					"item_name": "Test Item",
-					"item_group": "Products",
-					"stock_uom": "Nos",
-					"is_stock_item": 1,
-					"gst_hsn_code": "01011010"
-				}).insert(ignore_permissions=True)
-
-			# Create an original Delivery Note (non-return) to return against
-			original_dn = frappe.get_doc({
-				"doctype": "Delivery Note",
-				"customer": customer.name,
-				"company": company,
-				"posting_date": frappe.utils.nowdate(),
-				"currency":"INR" ,
-				"items": [{
-					"item_code": "Test Item",
-					"qty": 1,
-					"allow_zero_valuation_rate":1,
-					"warehouse": warehouse
-				}]
+		company = "_Test Company"
+		warehouse = "_Test Warehouse 1 - _TC"
+		fiscal_year = frappe.get_doc("Fiscal Year", "2025")
+		if not any(c.company == company for c in fiscal_year.companies):
+			fiscal_year.append("companies", {"company": company})
+			fiscal_year.save()
+			
+		# Ensure customer exists
+		if not frappe.db.exists("Customer", "Test Customer"):
+			customer = frappe.get_doc({
+				"doctype": "Customer",
+				"customer_name": "Test Customer",
+				"customer_group": "Individual",
+				"territory": "All Territories"
 			}).insert(ignore_permissions=True)
-			original_dn.submit()
+		else:
+			customer = frappe.get_doc("Customer", "Test Customer")
 
-			# Now create a return Delivery Note against the original
-			return_dn = frappe.get_doc({
-				"doctype": "Delivery Note",
-				"customer": customer.name,
-				"company": company,
-				"is_return": 1,
-				"return_against": original_dn.name,  # required for return
-				"issue_credit_note": 1,  # triggers your target code
-				"posting_date": frappe.utils.nowdate(),
-				"currency":"INR" ,
-				"items": [{
-					"item_code": "Test Item",
-					"qty": -1,
-					"warehouse": warehouse
-				}]
+		# Ensure item exists
+		if not frappe.db.exists("Item", "Test Item"):
+			item = frappe.get_doc({
+				"doctype": "Item",
+				"item_code": "Test Item",
+				"item_name": "Test Item",
+				"item_group": "Products",
+				"stock_uom": "Nos",
+				"is_stock_item": 1,
+				"gst_hsn_code": "01011010"
 			}).insert(ignore_permissions=True)
 
-			# Submit should now pass into the issue_credit_note condition
-			return_dn.submit()
+		# Create an original Delivery Note (non-return) to return against
+		original_dn = frappe.get_doc({
+			"doctype": "Delivery Note",
+			"customer": customer.name,
+			"company": company,
+			"posting_date": frappe.utils.nowdate(),
+			"currency": "INR",
+			"items": [{
+				"item_code": "Test Item",
+				"qty": 1,
+				"allow_zero_valuation_rate": 1,
+				"warehouse": warehouse
+			}]
+		}).insert(ignore_permissions=True)
+		original_dn.submit()
+
+		# Assert original DN is submitted
+		self.assertEqual(original_dn.docstatus, 1)
+
+		# Now create a return Delivery Note against the original
+		return_dn = frappe.get_doc({
+			"doctype": "Delivery Note",
+			"customer": customer.name,
+			"company": company,
+			"is_return": 1,
+			"return_against": original_dn.name,
+			"issue_credit_note": 1,
+			"posting_date": frappe.utils.nowdate(),
+			"currency": "INR",
+			"items": [{
+				"item_code": "Test Item",
+				"qty": -1,
+				"warehouse": warehouse
+			}]
+		}).insert(ignore_permissions=True)
+
+		# Submit return DN
+		return_dn.submit()
+
+		# Assert return DN is submitted
+		self.assertEqual(return_dn.docstatus, 1)
+		self.assertTrue(return_dn.is_return)
+		self.assertEqual(return_dn.return_against, original_dn.name)
 
 	def test_make_shipment_tc_sck_243(self):
-			from erpnext.stock.doctype.delivery_note.delivery_note import make_shipment
-			company = "_Test Company"
-			warehouse = "_Test Warehouse 1 - _TC"
-
-			contact = frappe.get_doc({
+		from erpnext.stock.doctype.delivery_note.delivery_note import make_shipment
+		company = "_Test Company"
+		warehouse = "_Test Warehouse 1 - _TC"
+		fiscal_year = frappe.get_doc("Fiscal Year", "2025")
+		# Check if company is already in child table
+		if not any(c.company == company for c in fiscal_year.companies):
+			fiscal_year.append("companies", {"company": company})
+			fiscal_year.save()
+		contact = frappe.get_doc({
 			"doctype": "Contact",
 			"first_name": "Test Contact",
 			"last_name": "Contact",
 			"email_id": "contact@exmple.com",
 			"phone_nos": [
-					{
-						"phone": "9999000099",
-						"is_primary_phone": 1
-					}
-				],
-				"mobile_nos": [
-					{
-						"mobile_no": "9999000099",
-						"is_primary_mobile_no": 1
-					}
-				] 
-			})
-			contact.insert()
-			# Ensure customer exists
-			if not frappe.db.exists("Customer", "Test Customer"):
-				customer = frappe.get_doc({
-					"doctype": "Customer",
-					"customer_name": "Test Customer",
-					"customer_group": "Individual",
-					"territory": "All Territories"
-				}).insert(ignore_permissions=True)
-			else:
-				customer = frappe.get_doc("Customer", "Test Customer")
-
-			# Ensure item exists
-			if not frappe.db.exists("Item", "Book"):
-				frappe.get_doc({
-					"doctype": "Item",
-					"item_code": "Book",
-					"item_name": "Book",
-					"stock_uom": "Nos",
-					"item_group": "Products",
-					"is_stock_item": 1,
-					"gst_hsn_code": "01011010"
-				}).insert(ignore_permissions=True)
-			
-			dn = frappe.get_doc({
-				"doctype": "Delivery Note",
-				"customer": customer.name,
-				"company": company,
-				"posting_date": frappe.utils.nowdate(),
-				"currency": "INR",
-				"items": [{
-					"item_code": "Book",
-					"qty": 1,
-					"allow_zero_valuation_rate":1,
-					"warehouse": warehouse
-				}]
+				{
+					"phone": "9999000099",
+					"is_primary_phone": 1
+				}
+			],
+			"mobile_nos": [
+				{
+					"mobile_no": "9999000099",
+					"is_primary_mobile_no": 1
+				}
+			]
+		})
+		contact.insert()
+		# Ensure customer exists
+		if not frappe.db.exists("Customer", "Test Customer"):
+			customer = frappe.get_doc({
+				"doctype": "Customer",
+				"customer_name": "Test Customer",
+				"customer_group": "Individual",
+				"territory": "All Territories"
 			}).insert(ignore_permissions=True)
-			dn.submit()
+		else:
+			customer = frappe.get_doc("Customer", "Test Customer")
 
-			make_shipment = make_shipment(dn.name)
+		# Ensure item exists
+		if not frappe.db.exists("Item", "Book"):
+			frappe.get_doc({
+				"doctype": "Item",
+				"item_code": "Book",
+				"item_name": "Book",
+				"stock_uom": "Nos",
+				"item_group": "Products",
+				"is_stock_item": 1,
+				"gst_hsn_code": "01011010"
+			}).insert(ignore_permissions=True)
+
+		dn = frappe.get_doc({
+			"doctype": "Delivery Note",
+			"customer": customer.name,
+			"company": company,
+			"posting_date": frappe.utils.nowdate(),
+			"currency": "INR",
+			"items": [{
+				"item_code": "Book",
+				"qty": 1,
+				"allow_zero_valuation_rate": 1,
+				"warehouse": warehouse
+			}]
+		}).insert(ignore_permissions=True)
+		dn.submit()
+
+		shipment = make_shipment(dn.name)
+
+
+		# Check the Delivery Note docstatus is 1 (submitted)
+		self.assertEqual(dn.docstatus, 1)
+
+		# Check that shipment was created and is a valid doc
+		self.assertEqual(shipment.doctype, "Shipment")
 		
 	def test_validate_warehouse_without_warehouse_for_stock_item_tc_sck_244(self):
-			# Create a Customer
-			customer = frappe.get_doc({
-				'doctype': 'Customer',
-				'customer_name': 'Test Customer',
-				'customer_group': 'Commercial',
-				'territory': 'All Territories'
-			})
-			customer.insert()
+		company = "_Test Company"
+		# Create a Customer
+		customer = frappe.get_doc({
+			'doctype': 'Customer',
+			'customer_name': 'Test Customer',
+			'customer_group': 'Commercial',
+			'territory': 'All Territories'
+		})
+		customer.insert()
+		fiscal_year = frappe.get_doc("Fiscal Year", "2025")
+		if not any(c.company == company for c in fiscal_year.companies):
+			fiscal_year.append("companies", {"company": company})
+			fiscal_year.save()
+		# Create a Company
+		company = frappe.get_doc({
+			'doctype': 'Company',
+			'company_name': 'Test Company',
+			'abbr': 'TCO',
+			'default_currency': 'USD'
+		})
+		company.insert()
 
-			# Create a Company
-			company = frappe.get_doc({
-				'doctype': 'Company',
-				'company_name': 'Test Company',
-				'abbr': 'TCO',
-				'default_currency': 'USD'
-			})
-			company.insert()
+		# Create a Warehouse
+		warehouse = frappe.get_doc({
+			'doctype': 'Warehouse',
+			'warehouse_name': 'Test Warehouse',
+			'company': company.name
+		})
+		warehouse.insert()
 
-			# Create a Warehouse
-			warehouse = frappe.get_doc({
-				'doctype': 'Warehouse',
-				'warehouse_name': 'Test Warehouse',
-				'company': company.name
-			})
-			warehouse.insert()
+		# Create a Stock Item
+		item = frappe.get_doc({
+			'doctype': 'Item',
+			'item_code': 'ITEM-001',
+			'item_name': 'Test Stock Item',
+			'item_group': 'Products',
+			'stock_uom': 'Nos',
+			'is_stock_item': 1,
+			'gst_hsn_code':"01011010",
+			'default_warehouse': warehouse.name
+		})
+		item.insert()
 
-			# Create a Stock Item
-			item = frappe.get_doc({
-				'doctype': 'Item',
-				'item_code': 'ITEM-001',
-				'item_name': 'Test Stock Item',
-				'item_group': 'Products',
-				'stock_uom': 'Nos',
-				'is_stock_item': 1,
-				'gst_hsn_code':"01011010",
-				'default_warehouse': warehouse.name
-			})
-			item.insert()
-
-			# Create a Delivery Note with no warehouse specified for the item
-			delivery_note = frappe.get_doc({
-				'doctype': 'Delivery Note',
-				'customer': customer.name,
-				'company': company.name,
-				'items': [
-					{
-						'item_code': 'ITEM-001',
-						'qty': 1,
-						'rate': 100,
-						'warehouse': '',  # No warehouse specified
-					}
-				]
-			})
-			
-			# Validate and check if the warehouse validation fails
-			with self.assertRaises(frappe.ValidationError):
-				delivery_note.save()
+		# Create a Delivery Note with no warehouse specified for the item
+		delivery_note = frappe.get_doc({
+			'doctype': 'Delivery Note',
+			'customer': customer.name,
+			'company': company.name,
+			'items': [
+				{
+					'item_code': 'ITEM-001',
+					'qty': 1,
+					'rate': 100,
+					'warehouse': '',  # No warehouse specified
+				}
+			]
+		})
+		
+		# Validate and check if the warehouse validation fails
+		with self.assertRaises(frappe.ValidationError):
+			delivery_note.save()
 
 	def test_check_next_docstatus_sales_invoice_submitted_tc_sck_245(self):
+		company = "_Test Company"
+		fiscal_year = frappe.get_doc("Fiscal Year", "2025")
+		if not any(c.company == company for c in fiscal_year.companies):
+			fiscal_year.append("companies", {"company": company})
+			fiscal_year.save()
 		# Step 1: Create Customer
 		customer = frappe.get_doc({
 			"doctype": "Customer",
@@ -444,153 +492,182 @@ class TestDeliveryNote(FrappeTestCase):
 		self.assertIn("Sales Invoice", str(context.exception))
 		
 	def test_check_if_submitted_installation_note_submitted_tc_sck_246(self):
-			# Step 1: Create Customer
-			customer = frappe.get_doc({
-				"doctype": "Customer",
-				"customer_name": "Test Customer",
-				"customer_group": "Commercial",
-				"territory": "All Territories"
-			}).insert()
+		company = "_Test Company"
+		fiscal_year = frappe.get_doc("Fiscal Year", "2025")
+		if not any(c.company == company for c in fiscal_year.companies):
+			fiscal_year.append("companies", {"company": company})
+			fiscal_year.save()
+		# Step 1: Create Customer
+		customer = frappe.get_doc({
+			"doctype": "Customer",
+			"customer_name": "Test Customer",
+			"customer_group": "Commercial",
+			"territory": "All Territories"
+		}).insert()
 
-			# Step 2: Create Item
-			item = frappe.get_doc({
-				"doctype": "Item",
-				"item_code": "ITEM-TEST",
-				"item_name": "Test Item",
-				"item_group": "Products",
-				"gst_hsn_code": "01011010",
-				"stock_uom": "Nos",
-				"is_stock_item": 0
-			}).insert()
+		# Step 2: Create Item
+		item = frappe.get_doc({
+			"doctype": "Item",
+			"item_code": "ITEM-TEST",
+			"item_name": "Test Item",
+			"item_group": "Products",
+			"gst_hsn_code": "01011010",
+			"stock_uom": "Nos",
+			"is_stock_item": 0
+		}).insert()
 
-			# Step 3: Create Delivery Note
-			delivery_note = frappe.get_doc({
-				"doctype": "Delivery Note",
-				"customer": customer.name,
-				"company": "_Test Company",
-				"currency": "INR",
-				"items": [{
-					"item_code": item.item_code,
-					"qty": 1,
-					"rate": 100
-				}]
-			}).insert()
-			delivery_note.submit()
+		# Step 3: Create Delivery Note
+		delivery_note = frappe.get_doc({
+			"doctype": "Delivery Note",
+			"customer": customer.name,
+			"company": "_Test Company",
+			"currency": "INR",
+			"items": [{
+				"item_code": item.item_code,
+				"qty": 1,
+				"rate": 100
+			}]
+		}).insert()
+		delivery_note.submit()
 
-			# Step 4: Create and Submit Installation Note linked to Delivery Note
-			installation_note = frappe.get_doc({
-				"doctype": "Installation Note",
-				"customer": customer.name,
-				"company": "_Test Company",
-				"inst_date": frappe.utils.nowdate(),
-				"items": [{
-					"item_code": item.item_code,
-					"qty": 1,
-					"prevdoc_doctype": "Delivery Note",
-					"prevdoc_docname": delivery_note.name
-				}]
-			}).insert()
-			installation_note.submit()
+		# Step 4: Create and Submit Installation Note linked to Delivery Note
+		installation_note = frappe.get_doc({
+			"doctype": "Installation Note",
+			"customer": customer.name,
+			"company": "_Test Company",
+			"inst_date": frappe.utils.nowdate(),
+			"items": [{
+				"item_code": item.item_code,
+				"qty": 1,
+				"prevdoc_doctype": "Delivery Note",
+				"prevdoc_docname": delivery_note.name
+			}]
+		}).insert()
+		installation_note.submit()
 
-			# Step 5: Manually bypass Sales Invoice condition in the test to ensure it doesn't interfere
-			# Create a situation where the Sales Invoice check won't be triggered.
-			# This can be achieved by ensuring that there are no Sales Invoices linked to the Delivery Note.
-			
-			# Create a dummy non-submitted Sales Invoice that is not linked to this Delivery Note
-			# or make sure it does not satisfy the condition for the submit_rv check.
-			frappe.db.sql("DELETE FROM `tabSales Invoice Item` WHERE `delivery_note` = %s", (delivery_note.name,))
-			frappe.db.sql("DELETE FROM `tabSales Invoice` WHERE `name` = %s", ("non_existent_sales_invoice",))
-
-			# Step 6: Reload the Delivery Note (so it's in sync with the latest database state)
-			delivery_note.reload()
-
-			# Step 7: Now check that check_next_docstatus throws ValidationError for Installation Note submission
-			with self.assertRaises(frappe.ValidationError) as context:
-				delivery_note.check_next_docstatus()
-
-			# Step 8: Ensure the exception message contains 'Installation Note'
-			self.assertTrue(
-				"Installation Note" in str(context.exception),
-				"ValidationError must mention Installation Note."
-			)
+		# Step 5: Manually bypass Sales Invoice condition in the test to ensure it doesn't interfere
+		# Create a situation where the Sales Invoice check won't be triggered.
+		# This can be achieved by ensuring that there are no Sales Invoices linked to the Delivery Note.
 		
+		# Create a dummy non-submitted Sales Invoice that is not linked to this Delivery Note
+		# or make sure it does not satisfy the condition for the submit_rv check.
+		frappe.db.sql("DELETE FROM `tabSales Invoice Item` WHERE `delivery_note` = %s", (delivery_note.name,))
+		frappe.db.sql("DELETE FROM `tabSales Invoice` WHERE `name` = %s", ("non_existent_sales_invoice",))
+
+		# Step 6: Reload the Delivery Note (so it's in sync with the latest database state)
+		delivery_note.reload()
+
+		# Step 7: Now check that check_next_docstatus throws ValidationError for Installation Note submission
+		with self.assertRaises(frappe.ValidationError) as context:
+			delivery_note.check_next_docstatus()
+
+		# Step 8: Ensure the exception message contains 'Installation Note'
+		self.assertTrue(
+			"Installation Note" in str(context.exception),
+			"ValidationError must mention Installation Note."
+		)
+
 	def test_check_credit_limit_with_bypass_tc_sck_247(self):
-			# Create or fetch the customer and company objects
-			if not frappe.db.exists("Company", "_Test Company"):
-				self.company = frappe.get_doc({
-					'doctype': 'Company',
-					'company_name': '_Test Company',
-					'abbr': 'TCO',
-					'default_currency': 'USD'
-				})
-				self.company.insert()
-			else:
-				self.company = frappe.get_doc("Company", "_Test Company")
-			
-			self.customer = frappe.get_doc({
-				'doctype': 'Customer',
-				'customer_name': 'Test Customer',
-				'customer_group': 'Commercial',
-				'territory': 'All Territories',
-				'credit_limits':[{
-				"doctype":"Customer Credit Limit",
-				"company":self.company.name,
-				"bypass_credit_limit_check":1
-				}]
+		company = "_Test Company"
+		# Create or fetch the customer and company objects
+		if not frappe.db.exists("Company", company):
+			self.company = frappe.get_doc({
+				'doctype': 'Company',
+				'company_name': company,
+				'abbr': 'TCO',
+				'default_currency': 'USD'
 			})
-			self.customer.insert()
+			self.company.insert()
+		else:
+			self.company = frappe.get_doc("Company", "_Test Company")
+				
+		fiscal_year = frappe.get_doc("Fiscal Year", "2025")
+		if not any(c.company == company for c in fiscal_year.companies):
+			fiscal_year.append("companies", {"company": company})
+			fiscal_year.save()
+		self.customer = frappe.get_doc({
+			'doctype': 'Customer',
+			'customer_name': 'Test Customer',
+			'customer_group': 'Commercial',
+			'territory': 'All Territories',
+			'credit_limits': [{
+				"doctype": "Customer Credit Limit",
+				"company": self.company.name,
+				"bypass_credit_limit_check": 1
+			}]
+		})
+		self.customer.insert()
 
-			
+		# Create the item ITEM-001 before using it in the Delivery Note
+		self.item = frappe.get_doc({
+			'doctype': 'Item',
+			'item_code': 'ITEM-001',
+			'item_name': 'Test Item',
+			'item_group': 'Products',
+			'gst_hsn_code': "01011010",
+			'stock_uom': 'Nos'
+		})
+		self.item.insert()
 
-			# Create the item ITEM-001 before using it in the Delivery Note
-			self.item = frappe.get_doc({
-				'doctype': 'Item',
-				'item_code': 'ITEM-001',
-				'item_name': 'Test Item',
-				'item_group': 'Products',
-				'gst_hsn_code': "01011010",
-				'stock_uom': 'Nos'
-			})
-			self.item.insert()
+		# Create or fetch a warehouse
+		self.warehouse = frappe.get_doc({
+			'doctype': 'Warehouse',
+			'warehouse_name': 'Test Warehouse',
+			'company': self.company.name
+		})
+		self.warehouse.insert()
 
-			# Create or fetch a warehouse
-			self.warehouse = frappe.get_doc({
-				'doctype': 'Warehouse',
-				'warehouse_name': 'Test Warehouse',
-				'company': self.company.name
-			})
-			self.warehouse.insert()
+		# Set up mock data for the Customer Credit Limit to ensure bypass_credit_limit_check is True
+		frappe.db.set_value("Customer Credit Limit", 
+							{"parent": self.customer.name, "parenttype": "Customer", "company": self.company.name},
+							"bypass_credit_limit_check", 1)  # Setting it to 1 (True) to bypass credit limit check
 
-			# Set up mock data for the Customer Credit Limit to ensure bypass_credit_limit_check is True
-			frappe.db.set_value("Customer Credit Limit", 
-								{"parent": self.customer.name, "parenttype": "Customer", "company": self.company.name},
-								"bypass_credit_limit_check", 1)  # Setting it to 1 (True) to bypass credit limit check
+		# Create a test Delivery Note manually
+		delivery_note = frappe.get_doc({
+			'doctype': 'Delivery Note',
+			'customer': self.customer.name,
+			'company': self.company.name,
+			'items': [
+				{
+					'item_code': 'ITEM-001',
+					'qty': 1,
+					'rate': 100,
+					'allow_zero_valuation_rate': 1,
+					'warehouse': self.warehouse.name,
+					'against_sales_invoice': None
+				}
+			]
+		})
+		frappe.get_doc({
+			'doctype': 'Currency Exchange',
+			'from_currency': 'USD',
+			'to_currency': 'INR',
+			'exchange_rate': 80,
+			'date': frappe.utils.nowdate()
+		}).insert()
+		delivery_note.insert()
+		delivery_note.submit()
 
-			
-			# Create a test Delivery Note manually
-			delivery_note = frappe.get_doc({
-				'doctype': 'Delivery Note',
-				'customer': self.customer.name,
-				'company': self.company.name,
-				'items': [
-					{
-						'item_code': 'ITEM-001',
-						'qty': 1,
-						'rate': 100,
-						'allow_zero_valuation_rate':1,
-						'warehouse': self.warehouse.name,  # Add warehouse for the item
-						'against_sales_invoice': None  # Ensures it's not against a sales invoice
-					}
-				]
-			})
-			delivery_note.insert()
-			delivery_note.submit()
+		# Manually set the base_grand_total
+		delivery_note.base_grand_total = 500
 
-			# Manually set the base_grand_total for the document (or retrieve it as needed)
-			delivery_note.base_grand_total = 500  # Set an arbitrary grand total amount
+		# Call the check_credit_limit method to trigger the bypass condition
+		delivery_note.check_credit_limit()
 
-			# Call the check_credit_limit method to trigger the bypass condition
-			delivery_note.check_credit_limit()
+
+		# Check if delivery note docstatus is submitted (1)
+		self.assertEqual(delivery_note.docstatus, 1)
+
+		# Check if base grand total is set correctly
+		self.assertEqual(delivery_note.base_grand_total, 500)
+
+		# Check if bypass_credit_limit_check is set to 1 (True)
+		credit_limit = frappe.get_value(
+			"Customer Credit Limit",
+			{"parent": self.customer.name, "company": self.company.name},
+			"bypass_credit_limit_check"
+		)
+		self.assertEqual(credit_limit, 1)
 			
 	def test_delivery_note_no_gl_entry(self):
 		frappe.db.get_value("Warehouse", "_Test Warehouse - _TC", "company")
