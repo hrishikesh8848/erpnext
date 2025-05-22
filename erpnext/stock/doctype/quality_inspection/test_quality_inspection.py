@@ -3,7 +3,7 @@
 
 import frappe
 from frappe.tests.utils import FrappeTestCase, change_settings
-from frappe.utils import nowdate
+from frappe.utils import add_days, nowdate, today
 
 from erpnext.controllers.stock_controller import (
 	QualityInspectionNotSubmittedError,
