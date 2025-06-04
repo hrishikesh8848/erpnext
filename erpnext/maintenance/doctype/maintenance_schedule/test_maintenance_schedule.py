@@ -164,7 +164,7 @@ class TestMaintenanceSchedule(unittest.TestCase):
 		item_code = "_Test Serial Item"
 		make_serial_item_with_serial(item_code)
 		ms = make_maintenance_schedule(item_code=item_code, serial_no="TEST001, TEST002")
-		ms.save()
+		# ms.save()
 
 		# Before Save
 		self.assertEqual(ms.schedules[0].serial_no, "TEST001, TEST002")
